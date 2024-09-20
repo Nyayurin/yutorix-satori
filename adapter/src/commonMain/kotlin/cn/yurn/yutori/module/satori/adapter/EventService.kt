@@ -139,7 +139,7 @@ class WebSocketEventService(
 
                                 else -> throw UnsupportedOperationException("Unsupported signal: $signal")
                             }
-                        } catch (e: JsonConvertException) {
+                        } catch (e: Exception) {
                             Logger.w(name, e) { "事件解析错误" }
                         }
                     } catch (e: Exception) {
