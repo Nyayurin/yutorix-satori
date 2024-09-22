@@ -20,6 +20,11 @@ ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "k
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
 ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 yutori = { module = "cn.yurn.yutori:yutori", version.ref = "yutori" }
+yutori-ios-x64 = { module = "cn.yurn.yutori:yutori-iosx64", version.ref = "yutori" }
+yutori-ios-arm64 = { module = "cn.yurn.yutori:yutori-iosarm64", version.ref = "yutori" }
+yutori-ios-simulator-arm64 = { module = "cn.yurn.yutori:yutori-iossimulatorarm64", version.ref = "yutori" }
+yutori-macos-x64 = { module = "cn.yurn.yutori:yutori-macosx64", version.ref = "yutori" }
+yutori-macos-arm64 = { module = "cn.yurn.yutori:yutori-macosarm64", version.ref = "yutori" }
 
 [plugins]
 multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
