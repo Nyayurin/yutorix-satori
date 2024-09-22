@@ -51,36 +51,6 @@ class WebSocketEventService(
                 }
                 val name = yutori.name
                 var connected = false
-                /*
-                 这一段超时断连的代码不知为何无法正常运行
-                 具体表现为当 WebSocket Server 关闭时, a 能正常打印, 而 b 无法打印
-                 若将下面的 client.webSocket(...) 使用 launch 包起来后会出现新的问题:
-                 a, b 都能正常打印, 但 WebSocket 连接永远不成功(具体表现为走到 client.webSocket 后发生阻塞, 触发下面的超时断连)
-                 参考下面代码:
-                 launch {
-                    println("a")
-                    delay(1000)
-                    println("b")
-                    if (!connected) {
-                        logger.warn(name, "无法建立 WebSocket 连接: 连接超时")
-                    }
-                 }
-                 launch {
-                    println("c")
-                    delay(500) // 无论 50 100 500 1000 2000 5000 最终结果都不会有任何区别
-                    println("d")
-                    client.webSocket(...)
-                 }
-                 具体情况是 a, b, c, d 都能正常打印, 但走到 client.webSocket 一行后发生阻塞, 导致上一个 launch 内触发超时断连
-                 */
-                /*launch {
-                    println("a")
-                    delay(1000)
-                    println("b")
-                    if (!connected) {
-                        logger.warn(name, "无法建立 WebSocket 连接: 连接超时")
-                    }
-                }*/
                 client.webSocket(
                     HttpMethod.Get,
                     properties.host,
@@ -177,9 +147,10 @@ class WebSocketEventService(
             }
             Logger.d(name) { "事件详细信息: $event" }
             sequence = event.id
-            yutori.adapter.container(event, yutori, actionsList!!.find {
-                actions -> actions.platform == event.platform && actions.self_id == event.self_id
-            }!!)
+            val context = Context(actionsList!!.find {
+                    actions -> actions.platform == event.platform && actions.self_id == event.self_id
+            }!!, event, yutori)
+            yutori.adapter.container(context)
         } catch (e: Exception) {
             Logger.w(name, e) { "处理事件时出错: $event" }
         }
