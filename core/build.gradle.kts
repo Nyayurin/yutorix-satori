@@ -71,26 +71,6 @@ kotlin {
             api(libs.ktor.serialization.kotlinx.json)
             api(libs.ksoup)
         }
-
-        iosX64Main.dependencies {
-            implementation("cn.yurn.yutori:yutori-iosx64:28c5725e0109690fe0ede780641f8832ed31e453")
-        }
-
-        iosArm64Main.dependencies {
-            implementation("cn.yurn.yutori:yutori-iosarm64:28c5725e0109690fe0ede780641f8832ed31e453")
-        }
-
-        iosSimulatorArm64Main.dependencies {
-            implementation("cn.yurn.yutori:yutori-iossimulatorarm64:28c5725e0109690fe0ede780641f8832ed31e453")
-        }
-
-        macosX64Main.dependencies {
-            implementation("cn.yurn.yutori:yutori-macosx64:28c5725e0109690fe0ede780641f8832ed31e453")
-        }
-
-        macosArm64Main.dependencies {
-            implementation("cn.yurn.yutori:yutori-macosarm64:28c5725e0109690fe0ede780641f8832ed31e453")
-        }
     }
 }
 
