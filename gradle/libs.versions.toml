@@ -1,10 +1,10 @@
 [versions]
 kotlin = "2.0.20"
-agp = "8.5.2"
+agp = "8.6.1"
 atomicfu = "0.25.0"
 ktor = "3.0.0-rc-1"
-ksoup = "0.1.7"
-yutori = "046c782098b843c120016834a0dc529b758e3f0b"
+ksoup = "0.1.9"
+yutori = "6df4cf804e06662977abc587b4114c13c1064459"
 
 [libraries]
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -18,7 +18,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
-ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
+ksoup = { module = "com.fleeksoft.ksoup:ksoup-lite", version.ref = "ksoup" }
 yutori = { module = "cn.yurn.yutori:yutori", version.ref = "yutori" }
 yutori-ios-x64 = { module = "cn.yurn.yutori:yutori-iosx64", version.ref = "yutori" }
 yutori-ios-arm64 = { module = "cn.yurn.yutori:yutori-iosarm64", version.ref = "yutori" }
