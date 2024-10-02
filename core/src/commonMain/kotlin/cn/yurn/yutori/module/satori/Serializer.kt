@@ -9,7 +9,6 @@ import cn.yurn.yutori.GuildRole
 import cn.yurn.yutori.Interaction
 import cn.yurn.yutori.Login
 import cn.yurn.yutori.Message
-import cn.yurn.yutori.NumberParsingException
 import cn.yurn.yutori.PagingList
 import cn.yurn.yutori.SigningEvent
 import cn.yurn.yutori.User
@@ -85,7 +84,7 @@ object NumberSerializer : KSerializer<Number> {
         runCatching {
             encoder.encodeDouble(value.toDouble())
         }.getOrElse {
-            throw NumberParsingException(value.toString())
+            throw RuntimeException("Number serialize failed: $value")
         }
     }
 
@@ -99,7 +98,7 @@ object NumberSerializer : KSerializer<Number> {
         runCatching {
             decoder.decodeDouble()
         }.getOrElse {
-            throw NumberParsingException(decoder.decodeString())
+            throw RuntimeException("Number deserialize failed: ${decoder.decodeString()}")
         }
     }
 }
@@ -147,7 +146,7 @@ object EventSerializer : KSerializer<Event<SigningEvent>> {
             id = json.remove("id")!!.jsonPrimitive.long,
             type = json.remove("type")!!.jsonPrimitive.content,
             platform = json.remove("platform")!!.jsonPrimitive.content,
-            self_id = json.remove("self_id")!!.jsonPrimitive.content,
+            selfId = json.remove("self_id")!!.jsonPrimitive.content,
             timestamp = json.remove("timestamp")!!.jsonPrimitive.long,
             argv = json.remove("argv")?.let { Json.decodeFromJsonElement(InteractionArgvSerializer, it) },
             button = json.remove("button")?.let { Json.decodeFromJsonElement(
@@ -229,7 +228,7 @@ object ChannelSerializer : KSerializer<Channel> {
             encodeStringElement(descriptor, 0, value.id)
             encodeSerializableElement(descriptor, 1, NumberSerializer, value.type)
             encodeNullableSerializableElement(descriptor, 2, String.serializer(), value.name)
-            encodeNullableSerializableElement(descriptor, 3, String.serializer(), value.parent_id)
+            encodeNullableSerializableElement(descriptor, 3, String.serializer(), value.parentId)
         }
     }
 
@@ -242,7 +241,7 @@ object ChannelSerializer : KSerializer<Channel> {
             name = json["name"]?.run {
                 if (this !is JsonNull) jsonPrimitive.content else null
             },
-            parent_id = json["parent_id"]?.run{
+            parentId = json["parent_id"]?.run{
                 if (this !is JsonNull) jsonPrimitive.content else null
             }
         )
@@ -294,11 +293,11 @@ object LoginSerializer : KSerializer<Login> {
     override fun serialize(encoder: Encoder, value: Login) {
         encoder.encodeStructure(InteractionArgvSerializer.descriptor) {
             encodeNullableSerializableElement(descriptor, 0, UserSerializer, value.user)
-            encodeNullableSerializableElement(descriptor, 1, String.serializer(), value.self_id)
+            encodeNullableSerializableElement(descriptor, 1, String.serializer(), value.selfId)
             encodeNullableSerializableElement(descriptor, 2, String.serializer(), value.platform)
             encodeSerializableElement(descriptor, 3, NumberSerializer, value.status)
             encodeSerializableElement(descriptor, 4, ListSerializer(String.serializer()), value.features)
-            encodeSerializableElement(descriptor, 5, ListSerializer(String.serializer()), value.proxy_urls)
+            encodeSerializableElement(descriptor, 5, ListSerializer(String.serializer()), value.proxyUrls)
         }
     }
 
@@ -310,7 +309,7 @@ object LoginSerializer : KSerializer<Login> {
                 if (this !is JsonNull) Json.decodeFromJsonElement(UserSerializer, this)
                 else null
             },
-            self_id = json["self_id"]?.run {
+            selfId = json["self_id"]?.run {
                 if (this !is JsonNull) jsonPrimitive.content else null
             },
             platform = json["platform"]?.run {
@@ -318,7 +317,7 @@ object LoginSerializer : KSerializer<Login> {
             },
             status = json["status"]!!.jsonPrimitive.int,
             features = json["features"]!!.jsonArray.map { it.jsonPrimitive.content },
-            proxy_urls = json["proxy_urls"]!!.jsonArray.map { it.jsonPrimitive.content }
+            proxyUrls = json["proxy_urls"]!!.jsonArray.map { it.jsonPrimitive.content }
         )
     }
 }
@@ -337,7 +336,7 @@ object GuildMemberSerializer : KSerializer<GuildMember> {
             encodeNullableSerializableElement(descriptor, 0, UserSerializer, value.user)
             encodeNullableSerializableElement(descriptor, 1, String.serializer(), value.nick)
             encodeNullableSerializableElement(descriptor, 2, String.serializer(), value.avatar)
-            encodeNullableSerializableElement(descriptor, 3, NumberSerializer, value.joined_at)
+            encodeNullableSerializableElement(descriptor, 3, NumberSerializer, value.joinedAt)
         }
     }
 
@@ -355,7 +354,7 @@ object GuildMemberSerializer : KSerializer<GuildMember> {
             avatar = json["avatar"]?.run {
                 if (this !is JsonNull) jsonPrimitive.content else null
             },
-            joined_at = json["joined_at"]?.run {
+            joinedAt = json["joined_at"]?.run {
                 if (this !is JsonNull) jsonPrimitive.long else null
             },
         )
@@ -383,8 +382,8 @@ object MessageSerializer : KSerializer<Message> {
             encodeNullableSerializableElement(descriptor, 3, GuildSerializer, value.guild)
             encodeNullableSerializableElement(descriptor, 4, GuildMemberSerializer, value.member)
             encodeNullableSerializableElement(descriptor, 5, UserSerializer, value.user)
-            encodeNullableSerializableElement(descriptor, 6, NumberSerializer, value.created_at)
-            encodeNullableSerializableElement(descriptor, 7, NumberSerializer, value.updated_at)
+            encodeNullableSerializableElement(descriptor, 6, NumberSerializer, value.createdAt)
+            encodeNullableSerializableElement(descriptor, 7, NumberSerializer, value.updatedAt)
         }
     }
 
@@ -412,10 +411,10 @@ object MessageSerializer : KSerializer<Message> {
                 if (this !is JsonNull) Json.decodeFromJsonElement(UserSerializer, this)
                 else null
             },
-            created_at = json["created_at"]?.run {
+            createdAt = json["created_at"]?.run {
                 if (this !is JsonNull) jsonPrimitive.long else null
             },
-            updated_at = json["updated_at"]?.run {
+            updatedAt = json["updated_at"]?.run {
                 if (this !is JsonNull) jsonPrimitive.long else null
             }
         )
@@ -438,7 +437,7 @@ object UserSerializer : KSerializer<User> {
             encodeNullableSerializableElement(descriptor, 1, String.serializer(), value.name)
             encodeNullableSerializableElement(descriptor, 2, String.serializer(), value.nick)
             encodeNullableSerializableElement(descriptor, 3, String.serializer(), value.avatar)
-            encodeNullableSerializableElement(descriptor, 4, Boolean.serializer(), value.is_bot)
+            encodeNullableSerializableElement(descriptor, 4, Boolean.serializer(), value.isBot)
         }
     }
 
@@ -456,7 +455,7 @@ object UserSerializer : KSerializer<User> {
             avatar = json["avatar"]?.run {
                  if (this !is JsonNull) jsonPrimitive.content else null
             },
-            is_bot = json["is_bot"]?.run {
+            isBot = json["is_bot"]?.run {
                  if (this !is JsonNull) jsonPrimitive.boolean else null
             },
         )
@@ -558,6 +557,7 @@ object DynamicLookupSerializer : KSerializer<Any> {
     override fun serialize(encoder: Encoder, value: Any) {
         val actualSerializer =
             encoder.serializersModule.getContextual(value::class) ?: value::class.serializer()
+        @Suppress("UNCHECKED_CAST")
         encoder.encodeSerializableValue(actualSerializer as KSerializer<Any>, value)
     }
 

@@ -1,8 +1,7 @@
+@file:Suppress("unused")
+
 package cn.yurn.yutori.module.satori
 
-import cn.yurn.yutori.MessageElementParsingException
-import cn.yurn.yutori.MessageElementPropertyParsingException
-import cn.yurn.yutori.NumberParsingException
 import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.message.element.MessageElement
 import cn.yurn.yutori.message.element.NodeMessageElement
@@ -15,9 +14,9 @@ import com.fleeksoft.ksoup.nodes.Node
 import com.fleeksoft.ksoup.nodes.TextNode
 
 fun String.encode() = replace("&", "&amp;")
-        .replace("\"", "&quot;")
-        .replace("<", "&lt;")
-        .replace(">", "&gt;")
+    .replace("\"", "&quot;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
 
 fun String.decode() = replace("&gt;", ">")
     .replace("&lt;", "<")
@@ -45,29 +44,25 @@ private fun parseElement(yutori: Yutori, node: Node): MessageElement = when (nod
                 val key = attr.key
                 val value = attr.value
                 this.properties[key] =
-                    when (val default = container.properties_default[key] ?: "") {
+                    when (val default = container.propertiesDefault[key] ?: "") {
                         is String -> value
-                        is Number -> try {
-                            if (value.contains(".")) {
-                                value.toDouble()
-                            } else {
-                                runCatching {
-                                    value.toInt()
-                                }.getOrElse {
-                                    value.toLong()
-                                }
+                        is Number -> if (value.contains(".")) {
+                            value.toDouble()
+                        } else {
+                            runCatching {
+                                value.toInt()
+                            }.getOrElse {
+                                value.toLong()
                             }
-                        } catch (_: NumberFormatException) {
-                            throw NumberParsingException(value)
                         }
 
-                        is Boolean -> try {
-                            if (attr.toString().contains("=")) value.toBooleanStrict() else true
-                        } catch (_: IllegalArgumentException) {
-                            throw NumberParsingException(value)
+                        is Boolean -> if (attr.toString().contains("=")) {
+                            value.toBooleanStrict()
+                        } else {
+                            true
                         }
 
-                        else -> throw MessageElementPropertyParsingException(default::class.toString())
+                        else -> throw RuntimeException("Message element property parse failed: ${default::class}")
                     }
             }
             for (child in node.childNodes()) this.children += parseElement(yutori, child)
@@ -76,7 +71,7 @@ private fun parseElement(yutori: Yutori, node: Node): MessageElement = when (nod
         )
     }
 
-    else -> throw MessageElementParsingException(node.toString())
+    else -> throw RuntimeException("Message element parse failed: $node")
 }
 
 fun List<MessageElement>.serialize() = joinToString("") { it.serialize() }
@@ -89,7 +84,7 @@ fun MessageElement.serialize() = when (this) {
 
 private fun Text.serialize() = text.encode()
 private fun NodeMessageElement.serialize() = buildString {
-    append("<$node_name")
+    append("<$nodeName")
     for (item in properties) {
         val key = item.key
         val value = item.value ?: continue
@@ -107,6 +102,6 @@ private fun NodeMessageElement.serialize() = buildString {
     } else {
         append(">")
         for (item in children) append(item)
-        append("</$node_name>")
+        append("</$nodeName>")
     }
 }

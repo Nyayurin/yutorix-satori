@@ -2,7 +2,15 @@
 
 package cn.yurn.yutori.module.satori.adapter
 
-import cn.yurn.yutori.*
+import cn.yurn.yutori.Context
+import cn.yurn.yutori.Event
+import cn.yurn.yutori.EventService
+import cn.yurn.yutori.Login
+import cn.yurn.yutori.MessageEvents
+import cn.yurn.yutori.RootActions
+import cn.yurn.yutori.SatoriProperties
+import cn.yurn.yutori.SigningEvent
+import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.module.satori.EventSignal
 import cn.yurn.yutori.module.satori.Identify
 import cn.yurn.yutori.module.satori.IdentifySignal
@@ -10,15 +18,24 @@ import cn.yurn.yutori.module.satori.PingSignal
 import cn.yurn.yutori.module.satori.PongSignal
 import cn.yurn.yutori.module.satori.ReadySignal
 import cn.yurn.yutori.module.satori.Signal
+import cn.yurn.yutori.nick
 import co.touchlab.kermit.Logger
-import io.ktor.client.*
-import io.ktor.client.plugins.websocket.*
-import io.ktor.http.*
-import io.ktor.serialization.*
+import io.ktor.client.HttpClient
+import io.ktor.client.plugins.websocket.WebSockets
+import io.ktor.client.plugins.websocket.receiveDeserialized
+import io.ktor.client.plugins.websocket.sendSerialized
+import io.ktor.client.plugins.websocket.webSocket
+import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
-import io.ktor.websocket.*
+import io.ktor.websocket.close
 import kotlinx.atomicfu.atomic
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 /**
@@ -36,7 +53,7 @@ class WebSocketEventService(
 ) : EventService {
     var actionsList: List<RootActions>? = null
     val service = SatoriActionService(properties, yutori.name)
-    private var is_received_pong by atomic(false)
+    private var isReceivedPong by atomic(false)
     private var job by atomic<Job?>(null)
 
     override suspend fun connect() {
@@ -50,7 +67,6 @@ class WebSocketEventService(
                     }
                 }
                 val name = yutori.name
-                var connected = false
                 client.webSocket(
                     HttpMethod.Get,
                     properties.host,
@@ -59,12 +75,11 @@ class WebSocketEventService(
                 ) {
                     try {
                         var ready = false
-                        connected = true
                         sendSerialized(IdentifySignal(Identify(properties.token, sequence)))
                         Logger.i(name) { "成功建立 WebSocket 连接, 尝试建立事件推送服务" }
                         launch {
                             delay(10000)
-                            if (!ready) throw TimeoutException("无法建立事件推送服务: READY 响应超时")
+                            if (!ready) throw RuntimeException("无法建立事件推送服务: READY 响应超时")
                             while (isActive) {
                                 sendSerialized(PingSignal())
                                 Logger.d(name) { "发送 PING" }
@@ -74,10 +89,10 @@ class WebSocketEventService(
                         }
                         launch {
                             do {
-                                is_received_pong = false
+                                isReceivedPong = false
                                 delay(1000 * 60)
-                                if (!is_received_pong) {
-                                    throw TimeoutException("WebSocket 连接断开: PONG 响应超时")
+                                if (!isReceivedPong) {
+                                    throw RuntimeException("WebSocket 连接断开: PONG 响应超时")
                                 }
                             } while (isActive)
                         }
@@ -90,7 +105,7 @@ class WebSocketEventService(
                                             add(
                                                 RootActions(
                                                     platform = login.platform!!,
-                                                    self_id = login.self_id!!,
+                                                    selfId = login.selfId!!,
                                                     service = service,
                                                     yutori = yutori
                                                 )
@@ -103,7 +118,7 @@ class WebSocketEventService(
 
                                 is EventSignal -> launch { onEvent(signal.body) }
                                 is PongSignal -> {
-                                    is_received_pong = true
+                                    isReceivedPong = true
                                     Logger.d(name) { "收到 PONG" }
                                 }
 
@@ -132,23 +147,23 @@ class WebSocketEventService(
         val name = yutori.name
         try {
             when (event.type) {
-                MessageEvents.Created -> Logger.i(name) {
+                MessageEvents.CREATED -> Logger.i(name) {
                     buildString {
-                        append("${event.platform}(${event.self_id}) 接收事件(${event.type}): ")
-                        append("${event.nullable_channel!!.name}(${event.nullable_channel!!.id})")
+                        append("${event.platform}(${event.selfId}) 接收事件(${event.type}): ")
+                        append("${event.nullableChannel!!.name}(${event.nullableChannel!!.id})")
                         append("-")
-                        append("${event.nick()}(${event.nullable_user!!.id})")
+                        append("${event.nick()}(${event.nullableUser!!.id})")
                         append(": ")
-                        append(event.nullable_message!!.content)
+                        append(event.nullableMessage!!.content)
                     }
                 }
 
-                else -> Logger.i(name) { "${event.platform}(${event.self_id}) 接收事件: ${event.type}" }
+                else -> Logger.i(name) { "${event.platform}(${event.selfId}) 接收事件: ${event.type}" }
             }
             Logger.d(name) { "事件详细信息: $event" }
             sequence = event.id
             val context = Context(actionsList!!.find {
-                    actions -> actions.platform == event.platform && actions.self_id == event.self_id
+                    actions -> actions.platform == event.platform && actions.selfId == event.selfId
             }!!, event, yutori)
             yutori.adapter.container(context)
         } catch (e: Exception) {

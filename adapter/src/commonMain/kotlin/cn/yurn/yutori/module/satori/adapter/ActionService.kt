@@ -2,7 +2,7 @@
     "MemberVisibilityCanBePrivate",
     "unused",
     "HttpUrlsUsage",
-    "UastIncorrectHttpHeaderInspection"
+    "UastIncorrectHttpHeaderInspection", "UNCHECKED_CAST"
 )
 
 package cn.yurn.yutori.module.satori.adapter
@@ -48,7 +48,7 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
         resource: String,
         method: String,
         platform: String?,
-        self_id: String?,
+        selfId: String?,
         content: Map<String, Any?>
     ): Any = HttpClient {
         install(ContentNegotiation) {
@@ -72,7 +72,7 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
                     )
                 }
                 platform?.let { append("X-Platform", platform) }
-                self_id?.let { append("X-Self-ID", self_id) }
+                selfId?.let { append("X-Self-ID", selfId) }
             }
             setBody(content.entries.filter { it.value != null }
                 .joinToString(",", "{", "}") { (key, value) ->
@@ -189,7 +189,7 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
         resource: String,
         method: String,
         platform: String,
-        self_id: String,
+        selfId: String,
         content: List<FormData>
     ): Map<String, String> =
         HttpClient {
@@ -211,7 +211,7 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
                         )
                     }
                     append("X-Platform", platform)
-                    append("X-Self-ID", self_id)
+                    append("X-Self-ID", selfId)
                 }
             }.buildString()
             val formData = formData {
