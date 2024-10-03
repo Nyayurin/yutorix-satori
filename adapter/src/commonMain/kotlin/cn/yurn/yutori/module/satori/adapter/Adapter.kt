@@ -6,8 +6,8 @@ import cn.yurn.yutori.Adapter
 import cn.yurn.yutori.BuilderMarker
 import cn.yurn.yutori.Login
 import cn.yurn.yutori.Reinstallable
-import cn.yurn.yutori.SatoriProperties
 import cn.yurn.yutori.Yutori
+import cn.yurn.yutori.module.satori.SatoriAdapterProperties
 import co.touchlab.kermit.Logger
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
@@ -18,7 +18,7 @@ val Adapter.Companion.Satori: SatoriAdapter
 @BuilderMarker
 class SatoriAdapter : Adapter(), Reinstallable {
     var host: String = "127.0.0.1"
-    var port: Int = 5500
+    var port: Int = 8080
     var path: String = ""
     var token: String? = null
     var version: String = "v1"
@@ -49,7 +49,7 @@ class SatoriAdapter : Adapter(), Reinstallable {
     override fun uninstall(yutori: Yutori) {}
 
     override suspend fun start(yutori: Yutori) {
-        val properties = SatoriProperties(host, port, path, token, version)
+        val properties = SatoriAdapterProperties(host, port, path, token, version)
         connecting = true
         var sequence: Number? = null
         do {

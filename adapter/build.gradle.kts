@@ -89,14 +89,8 @@ kotlin {
             api(libs.ktor.client.js)
         }
 
-        nativeMain.dependencies {
-        }
-
         appleMain.dependencies {
             api(libs.ktor.client.darwin)
-        }
-
-        iosMain.dependencies {
         }
 
         iosX64Main.dependencies {
@@ -109,9 +103,6 @@ kotlin {
 
         iosSimulatorArm64Main.dependencies {
             implementation(libs.yutori.ios.simulator.arm64)
-        }
-
-        macosMain.dependencies {
         }
 
         macosX64Main.dependencies {

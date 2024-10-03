@@ -39,21 +39,10 @@ kotlin {
         commonMain.dependencies {
             implementation(libs.yutori)
             implementation(project(":yutorix-satori-core"))
-        }
-
-        jvmMain.dependencies {
-        }
-
-        androidMain.dependencies {
-        }
-
-        nativeMain.dependencies {
-        }
-
-        appleMain.dependencies {
-        }
-
-        iosMain.dependencies {
+            api(libs.ktor.server.core)
+            api(libs.ktor.server.content.negotiation)
+            api(libs.ktor.server.cio)
+            api(libs.ktor.server.websockets)
         }
 
         iosX64Main.dependencies {
@@ -68,18 +57,12 @@ kotlin {
             implementation(libs.yutori.ios.simulator.arm64)
         }
 
-        macosMain.dependencies {
-        }
-
         macosX64Main.dependencies {
             implementation(libs.yutori.macos.x64)
         }
 
         macosArm64Main.dependencies {
             implementation(libs.yutori.macos.arm64)
-        }
-
-        linuxMain.dependencies {
         }
     }
 }

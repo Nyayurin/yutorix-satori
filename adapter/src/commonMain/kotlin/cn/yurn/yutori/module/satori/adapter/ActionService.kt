@@ -7,19 +7,26 @@
 
 package cn.yurn.yutori.module.satori.adapter
 
-import cn.yurn.yutori.ActionService
+import cn.yurn.yutori.AdapterActionService
+import cn.yurn.yutori.Channel
 import cn.yurn.yutori.FormData
-import cn.yurn.yutori.SatoriProperties
+import cn.yurn.yutori.Guild
+import cn.yurn.yutori.GuildMember
+import cn.yurn.yutori.GuildRole
+import cn.yurn.yutori.Message
+import cn.yurn.yutori.User
+import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.message.element.MessageElement
-import cn.yurn.yutori.module.satori.BidiPagingListSerializer
-import cn.yurn.yutori.module.satori.ChannelSerializer
-import cn.yurn.yutori.module.satori.GuildMemberSerializer
-import cn.yurn.yutori.module.satori.GuildRoleSerializer
-import cn.yurn.yutori.module.satori.GuildSerializer
-import cn.yurn.yutori.module.satori.LoginSerializer
-import cn.yurn.yutori.module.satori.MessageSerializer
-import cn.yurn.yutori.module.satori.PagingListSerializer
-import cn.yurn.yutori.module.satori.UserSerializer
+import cn.yurn.yutori.module.satori.SatoriAdapterProperties
+import cn.yurn.yutori.module.satori.SerializableBidiPagingList
+import cn.yurn.yutori.module.satori.SerializableChannel
+import cn.yurn.yutori.module.satori.SerializableGuild
+import cn.yurn.yutori.module.satori.SerializableGuildMember
+import cn.yurn.yutori.module.satori.SerializableGuildRole
+import cn.yurn.yutori.module.satori.SerializableLogin
+import cn.yurn.yutori.module.satori.SerializableMessage
+import cn.yurn.yutori.module.satori.SerializablePagingList
+import cn.yurn.yutori.module.satori.SerializableUser
 import cn.yurn.yutori.module.satori.serialize
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
@@ -40,10 +47,12 @@ import io.ktor.http.contentType
 import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
 import io.ktor.utils.io.core.use
-import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.json.Json
 
-class SatoriActionService(val properties: SatoriProperties, val name: String) : ActionService {
+class SatoriActionService(
+    val yutori: Yutori,
+    val properties: SatoriAdapterProperties
+) : AdapterActionService {
     override suspend fun send(
         resource: String,
         method: String,
@@ -92,7 +101,7 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
                         )
                     }
                 })
-            Logger.d(name) {
+            Logger.d(yutori.name) {
                 """
                 Satori Action Request: url: ${this.url},
                     headers: ${this.headers.build()},
@@ -100,13 +109,13 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
                 """.trimIndent()
             }
         }
-        Logger.d(name) { "Satori Action Response: $response" }
+        Logger.d(yutori.name) { "Satori Action Response: $response" }
         val body = response.bodyAsText()
         when (resource) {
             "channel" -> when (method) {
-                "get" -> Json.decodeFromString(ChannelSerializer, body)
-                "list" -> Json.decodeFromString(PagingListSerializer(ChannelSerializer), body)
-                "create" -> Json.decodeFromString(ChannelSerializer, body)
+                "get" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableChannel, Channel>>(body).toUniverse(yutori)
+                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(yutori)
                 "update" -> Unit
                 "delete" -> Unit
                 "mute" -> Unit
@@ -114,20 +123,20 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
             }
 
             "user.channel" -> when (method) {
-                "create" -> Json.decodeFromString(ChannelSerializer, body)
+                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "guild" -> when (method) {
-                "get" -> Json.decodeFromString(GuildSerializer, body)
-                "list" -> Json.decodeFromString(PagingListSerializer(GuildSerializer), body)
+                "get" -> Json.decodeFromString<SerializableGuild>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuild, Guild>>(body).toUniverse(yutori)
                 "approve" -> Unit
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "guild.member" -> when (method) {
-                "get" -> Json.decodeFromString(GuildMemberSerializer, body)
-                "list" -> Json.decodeFromString(PagingListSerializer(GuildMemberSerializer), body)
+                "get" -> Json.decodeFromString<SerializableGuildMember>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildMember, GuildMember>>(body).toUniverse(yutori)
                 "kick" -> Unit
                 "mute" -> Unit
                 "approve" -> Unit
@@ -141,24 +150,24 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
             }
 
             "guild.role" -> when (method) {
-                "list" -> Json.decodeFromString(PagingListSerializer(GuildRoleSerializer), body)
-                "create" -> Json.decodeFromString(GuildRoleSerializer, body)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildRole, GuildRole>>(body).toUniverse(yutori)
+                "create" -> Json.decodeFromString<SerializableGuildRole>(body).toUniverse(yutori)
                 "update" -> Unit
                 "delete" -> Unit
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "login" -> when (method) {
-                "get" -> Json.decodeFromString(LoginSerializer, body)
+                "get" -> Json.decodeFromString<SerializableLogin>(body).toUniverse(yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "message" -> when (method) {
-                "create" -> Json.decodeFromString(ListSerializer(MessageSerializer), body)
-                "get" -> Json.decodeFromString(MessageSerializer, body)
+                "create" -> Json.decodeFromString<List<SerializableMessage>>(body).map { it.toUniverse(yutori) }
+                "get" -> Json.decodeFromString<SerializableMessage>(body).toUniverse(yutori)
                 "delete" -> Unit
                 "update" -> Unit
-                "list" -> Json.decodeFromString(BidiPagingListSerializer(MessageSerializer), body)
+                "list" -> Json.decodeFromString<SerializableBidiPagingList<SerializableMessage, Message>>(body).toUniverse(yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
@@ -166,17 +175,17 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
                 "create" -> Unit
                 "delete" -> Unit
                 "clear" -> Unit
-                "list" -> Json.decodeFromString(PagingListSerializer(UserSerializer), body)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "user" -> when (method) {
-                "get" -> Json.decodeFromString(UserSerializer, body)
+                "get" -> Json.decodeFromString<SerializableUser>(body).toUniverse(yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "friend" -> when (method) {
-                "list" -> Json.decodeFromString(PagingListSerializer(UserSerializer), body)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(yutori)
                 "approve" -> Unit
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
@@ -224,14 +233,14 @@ class SatoriActionService(val properties: SatoriProperties, val name: String) : 
                     })
                 }
             }
-            Logger.d(name) {
+            Logger.d(yutori.name) {
                 """
                 Satori Action Request: url: $url,
                     body: $formData
                 """.trimIndent()
             }
             val response = client.submitFormWithBinaryData(url, formData)
-            Logger.d(name) { "Satori Action Response: $response" }
+            Logger.d(yutori.name) { "Satori Action Response: $response" }
             response.body()
         }
 }

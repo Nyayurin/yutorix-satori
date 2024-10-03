@@ -2,13 +2,12 @@
 
 package cn.yurn.yutori.module.satori.adapter
 
-import cn.yurn.yutori.Context
+import cn.yurn.yutori.AdapterContext
+import cn.yurn.yutori.AdapterEventService
 import cn.yurn.yutori.Event
-import cn.yurn.yutori.EventService
 import cn.yurn.yutori.Login
 import cn.yurn.yutori.MessageEvents
 import cn.yurn.yutori.RootActions
-import cn.yurn.yutori.SatoriProperties
 import cn.yurn.yutori.SigningEvent
 import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.module.satori.EventSignal
@@ -17,17 +16,19 @@ import cn.yurn.yutori.module.satori.IdentifySignal
 import cn.yurn.yutori.module.satori.PingSignal
 import cn.yurn.yutori.module.satori.PongSignal
 import cn.yurn.yutori.module.satori.ReadySignal
+import cn.yurn.yutori.module.satori.SatoriAdapterProperties
 import cn.yurn.yutori.module.satori.Signal
 import cn.yurn.yutori.nick
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
-import io.ktor.client.plugins.websocket.receiveDeserialized
 import io.ktor.client.plugins.websocket.sendSerialized
 import io.ktor.client.plugins.websocket.webSocket
 import io.ktor.http.HttpMethod
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
+import io.ktor.websocket.Frame
 import io.ktor.websocket.close
+import io.ktor.websocket.readText
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -38,105 +39,106 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
-/**
- * Satori 事件服务的 WebSocket 实现
- * @param properties Satori Server 配置
- * @param yutori Satori 配置
- */
 class WebSocketEventService(
-    val properties: SatoriProperties,
+    val properties: SatoriAdapterProperties,
     val onConnect: suspend WebSocketEventService.(List<Login>) -> Unit = { },
     val onClose: suspend () -> Unit = { },
     val onError: suspend () -> Unit = { },
     val yutori: Yutori,
     var sequence: Number? = null
-) : EventService {
-    var actionsList: List<RootActions>? = null
-    val service = SatoriActionService(properties, yutori.name)
-    private var isReceivedPong by atomic(false)
+) : AdapterEventService {
+    private val actionsList = mutableListOf<RootActions>()
+    val service = SatoriActionService(yutori, properties)
     private var job by atomic<Job?>(null)
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
 
     override suspend fun connect() {
         coroutineScope {
             job = launch {
                 val client = HttpClient {
                     install(WebSockets) {
-                        contentConverter = KotlinxWebsocketSerializationConverter(Json {
-                            ignoreUnknownKeys = true
-                        })
+                        contentConverter = KotlinxWebsocketSerializationConverter(json)
                     }
                 }
                 val name = yutori.name
-                client.webSocket(
-                    HttpMethod.Get,
-                    properties.host,
-                    properties.port,
-                    "${properties.path}/${properties.version}/events"
-                ) {
-                    try {
-                        var ready = false
-                        sendSerialized(IdentifySignal(Identify(properties.token, sequence)))
-                        Logger.i(name) { "成功建立 WebSocket 连接, 尝试建立事件推送服务" }
-                        launch {
-                            delay(10000)
-                            if (!ready) throw RuntimeException("无法建立事件推送服务: READY 响应超时")
-                            while (isActive) {
-                                sendSerialized(PingSignal())
-                                Logger.d(name) { "发送 PING" }
+                try {
+                    client.webSocket(
+                        HttpMethod.Get,
+                        properties.host,
+                        properties.port,
+                        "${properties.path}/${properties.version}/events"
+                    ) {
+                        try {
+                            yutori.actionsList.removeAll(actionsList)
+                            actionsList.clear()
+                            var ready = false
+                            var isReceivedPong: Boolean
+                            sendSerialized(IdentifySignal(Identify(properties.token, sequence?.toInt())))
+                            Logger.i(name) { "成功建立 WebSocket 连接, 尝试建立事件推送服务" }
+                            launch {
                                 delay(10000)
-                            }
-                            println("Done")
-                        }
-                        launch {
-                            do {
-                                isReceivedPong = false
-                                delay(1000 * 60)
-                                if (!isReceivedPong) {
-                                    throw RuntimeException("WebSocket 连接断开: PONG 响应超时")
+                                if (!ready) throw RuntimeException("无法建立事件推送服务: READY 等待超时")
+                                while (isActive) {
+                                    sendSerialized(PingSignal())
+                                    Logger.d(name) { "发送 PING" }
+                                    delay(10000)
                                 }
-                            } while (isActive)
-                        }
-                        while (isActive) try {
-                            when (val signal = receiveDeserialized<Signal>()) {
-                                is ReadySignal -> {
-                                    ready = true
-                                    actionsList = buildList {
+                            }
+                            while (isActive) try {
+                                val receive = (incoming.receive() as? Frame.Text ?: continue).readText()
+                                Logger.d(name) { "接收信令: $receive" }
+                                when (val signal = json.decodeFromString<Signal>(receive)) {
+                                    is ReadySignal -> {
+                                        ready = true
                                         for (login in signal.body.logins) {
-                                            add(
-                                                RootActions(
-                                                    platform = login.platform!!,
-                                                    selfId = login.selfId!!,
-                                                    service = service,
-                                                    yutori = yutori
-                                                )
+                                            val actions = RootActions(
+                                                platform = login.platform!!,
+                                                selfId = login.selfId!!,
+                                                service = service,
+                                                yutori = yutori
                                             )
+                                            actionsList += actions
+                                            yutori.actionsList += actions
+                                        }
+                                        onConnect(signal.body.logins.map { it.toUniverse(yutori) })
+                                        Logger.i(name) { "成功建立事件推送服务: ${signal.body.logins}" }
+                                        launch {
+                                            do {
+                                                isReceivedPong = false
+                                                delay(1000 * 60)
+                                                if (!isReceivedPong) {
+                                                    throw RuntimeException("WebSocket 连接断开: PONG 等待超时")
+                                                }
+                                            } while (isActive)
                                         }
                                     }
-                                    onConnect(signal.body.logins)
-                                    Logger.i(name) { "成功建立事件推送服务: ${signal.body.logins}" }
-                                }
 
-                                is EventSignal -> launch { onEvent(signal.body) }
-                                is PongSignal -> {
-                                    isReceivedPong = true
-                                    Logger.d(name) { "收到 PONG" }
-                                }
+                                    is EventSignal -> launch { onEvent(signal.body.toUniverse(yutori)) }
+                                    is PongSignal -> {
+                                        isReceivedPong = true
+                                        Logger.d(name) { "收到 PONG" }
+                                    }
 
-                                else -> throw UnsupportedOperationException("Unsupported signal: $signal")
+                                    else -> throw UnsupportedOperationException("Unsupported signal: $signal")
+                                }
+                            } catch (e: Exception) {
+                                Logger.w(name, e) { "信令解析错误" }
                             }
                         } catch (e: Exception) {
-                            Logger.w(name, e) { "事件解析错误" }
+                            if (e is CancellationException && e.message == "Event service disconnect") {
+                                Logger.i(name) { "WebSocket 连接断开: 主动断开连接" }
+                            } else {
+                                onError()
+                                Logger.w(name, e) { "WebSocket 连接断开" }
+                            }
+                            close()
                         }
-                    } catch (e: Exception) {
-                        if (e is CancellationException && e.message == "Event service disconnect") {
-                            Logger.i(name) { "WebSocket 连接断开: 主动断开连接" }
-                        } else {
-                            onError()
-                            Logger.w(name, e) { "WebSocket 连接断开" }
-                        }
-                        close()
+                        this@WebSocketEventService.onClose()
                     }
-                    this@WebSocketEventService.onClose()
+                } catch (e: Exception) {
+                    Logger.w(e) { "WebSocket 连接失败" }
                 }
                 client.close()
             }
@@ -162,9 +164,21 @@ class WebSocketEventService(
             }
             Logger.d(name) { "事件详细信息: $event" }
             sequence = event.id
-            val context = Context(actionsList!!.find {
+            val actions = actionsList.find {
                     actions -> actions.platform == event.platform && actions.selfId == event.selfId
-            }!!, event, yutori)
+            } ?: run {
+                val actions = RootActions(
+                    platform = event.platform,
+                    selfId = event.selfId,
+                    service = service,
+                    yutori = yutori
+                )
+                actionsList += actions
+                yutori.actionsList += actions
+                actions
+            }
+
+            val context = AdapterContext(actions, event, yutori)
             yutori.adapter.container(context)
         } catch (e: Exception) {
             Logger.w(name, e) { "处理事件时出错: $event" }
