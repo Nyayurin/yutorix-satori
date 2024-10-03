@@ -70,11 +70,12 @@ yutorix-satori-server = { module = "cn.yurn.yutorix:yutorix-satori-server", vers
 ```kotlin
 install(Adapter.Satori) {
     host = "127.0.0.1"
-    port = 5500
+    port = 8080
     token = "token"
 }
-// Coming soon
 install(Server.Satori) {
-    
+    listen = "0.0.0.0"
+    port = 8080
+    token = "token"
 }
 ```
