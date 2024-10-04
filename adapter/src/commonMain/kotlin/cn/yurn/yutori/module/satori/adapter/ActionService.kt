@@ -57,7 +57,7 @@ class SatoriActionService(
         resource: String,
         method: String,
         platform: String?,
-        selfId: String?,
+        userId: String?,
         content: Map<String, Any?>
     ): Any = HttpClient {
         install(ContentNegotiation) {
@@ -80,8 +80,8 @@ class SatoriActionService(
                         "Bearer ${properties.token}"
                     )
                 }
-                platform?.let { append("X-Platform", platform) }
-                selfId?.let { append("X-Self-ID", selfId) }
+                platform?.let { append("Satori-Platform", platform) }
+                userId?.let { append("Satori-User-ID", userId) }
             }
             setBody(content.entries.filter { it.value != null }
                 .joinToString(",", "{", "}") { (key, value) ->
@@ -198,7 +198,7 @@ class SatoriActionService(
         resource: String,
         method: String,
         platform: String,
-        selfId: String,
+        userId: String,
         content: List<FormData>
     ): Map<String, String> =
         HttpClient {
@@ -219,8 +219,8 @@ class SatoriActionService(
                             "Bearer ${properties.token}"
                         )
                     }
-                    append("X-Platform", platform)
-                    append("X-Self-ID", selfId)
+                    append("Satori-Platform", platform)
+                    append("Satori-User-ID", userId)
                 }
             }.buildString()
             val formData = formData {

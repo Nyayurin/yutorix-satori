@@ -95,7 +95,7 @@ class WebSocketEventService(
                                         for (login in signal.body.logins) {
                                             val actions = RootActions(
                                                 platform = login.platform!!,
-                                                selfId = login.selfId!!,
+                                                userId = login.user!!.id,
                                                 service = service,
                                                 yutori = yutori
                                             )
@@ -165,11 +165,11 @@ class WebSocketEventService(
             Logger.d(name) { "事件详细信息: $event" }
             sequence = event.id
             val actions = actionsList.find {
-                    actions -> actions.platform == event.platform && actions.selfId == event.selfId
+                    actions -> actions.platform == event.platform && actions.userId == event.selfId
             } ?: run {
                 val actions = RootActions(
                     platform = event.platform,
-                    selfId = event.selfId,
+                    userId = event.selfId,
                     service = service,
                     yutori = yutori
                 )

@@ -4,7 +4,7 @@ agp = "8.6.1"
 atomicfu = "0.25.0"
 ktor = "3.0.0-rc-1"
 ksoup = "0.1.9"
-yutori = "3fcccaa1166fb9a63874bcff382170e98cc180d8"
+yutori = "dae7ab90aa9b5e3b3ee88a5900635c3fd4b83e83"
 
 [libraries]
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }

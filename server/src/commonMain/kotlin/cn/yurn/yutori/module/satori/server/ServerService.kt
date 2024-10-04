@@ -139,10 +139,10 @@ class SatoriServerService(
                         post("${properties.path}/${properties.version}/{api}") {
                             val address = call.request.local.remoteAddress
                             val api = "/" + call.pathParameters["api"]!!
-                            val platform = call.request.headers["X-Platform"]
-                            val selfId = call.request.headers["X-Self-ID"]
+                            val platform = call.request.headers["Satori-Platform"]
+                            val userId = call.request.headers["Satori-User-ID"]
                             val content = call.receiveText()
-                            Logger.i(name) { "Action($address): $api($platform, $selfId), $content" }
+                            Logger.i(name) { "Action($address): $api($platform, $userId), $content" }
                             val token = call.request.headers["Authorization"]
                             if (token == null) {
                                 call.respond(HttpStatusCode.Unauthorized)
@@ -159,8 +159,8 @@ class SatoriServerService(
                                 yutori.actionsList,
                                 Request(
                                     api, mutableMapOf(
-                                        "platform" to platform,
-                                        "selfId" to selfId,
+                                        "satoriPlatform" to platform,
+                                        "satoriUserId" to userId,
                                         "channelId" to element.remove("channel_id")?.jsonPrimitive?.content,
                                         "guildId" to element.remove("guild_id")?.jsonPrimitive?.content,
                                         "next" to element.remove("next")?.jsonPrimitive?.content,

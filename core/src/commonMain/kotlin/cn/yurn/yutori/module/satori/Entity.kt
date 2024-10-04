@@ -255,19 +255,18 @@ data class SerializableGuild(
 
 @Serializable
 data class SerializableLogin(
-    val user: SerializableUser? = null,
-    @SerialName("self_id")
-    val selfId: String? = null,
+    val adapter: String,
     val platform: String? = null,
-    val status: Int,
+    val user: SerializableUser? = null,
+    val status: Int? = null,
     val features: List<String> = listOf(),
     @SerialName("proxy_urls")
     val proxyUrls: List<String> = listOf(),
 ) : Convertable<Login> {
     override fun toUniverse(yutori: Yutori) = Login(
-        user = user?.toUniverse(yutori),
-        selfId = selfId,
+        adapter = adapter,
         platform = platform,
+        user = user?.toUniverse(yutori),
         status = status,
         features = features,
         proxyUrls = proxyUrls
@@ -275,10 +274,10 @@ data class SerializableLogin(
 
     companion object {
         fun fromUniverse(universe: Login) = SerializableLogin(
-            user = universe.user?.let { SerializableUser.fromUniverse(it) },
-            selfId = universe.selfId,
+            adapter = universe.adapter,
             platform = universe.platform,
-            status = universe.status.toInt(),
+            user = universe.user?.let { SerializableUser.fromUniverse(it) },
+            status = universe.status?.toInt(),
             features = universe.features,
             proxyUrls = universe.proxyUrls
         )
