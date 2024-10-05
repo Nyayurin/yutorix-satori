@@ -59,9 +59,10 @@ import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 class SatoriServerService(
+    alias: String?,
     val properties: SatoriServerProperties,
     val yutori: Yutori,
-) : ServerService {
+) : ServerService(alias) {
     val logins = mutableListOf<Login>()
     val connectedClients = mutableListOf<WebSocketServerSession>()
     private var job by atomic<Job?>(null)
@@ -140,9 +141,9 @@ class SatoriServerService(
                             val address = call.request.local.remoteAddress
                             val api = "/" + call.pathParameters["api"]!!
                             val platform = call.request.headers["Satori-Platform"]
-                            val userId = call.request.headers["Satori-User-ID"]
+                            val selfId = call.request.headers["Satori-User-ID"]
                             val content = call.receiveText()
-                            Logger.i(name) { "Action($address): $api($platform, $userId), $content" }
+                            Logger.i(name) { "Action($address): $api($platform, $selfId), $content" }
                             val token = call.request.headers["Authorization"]
                             if (token == null) {
                                 call.respond(HttpStatusCode.Unauthorized)
@@ -156,16 +157,19 @@ class SatoriServerService(
                             }
                             val element = json.decodeFromString<JsonElement>(content).jsonObject.toMutableMap()
                             val context = ServerContext(
-                                yutori.actionsList,
                                 Request(
-                                    api, mutableMapOf(
-                                        "satoriPlatform" to platform,
-                                        "satoriUserId" to userId,
+                                    alias = alias,
+                                    api = api,
+                                    header = mutableMapOf(
+                                        "platform" to platform,
+                                        "selfId" to selfId
+                                    ),
+                                    body = mutableMapOf(
                                         "channelId" to element.remove("channel_id")?.jsonPrimitive?.content,
                                         "guildId" to element.remove("guild_id")?.jsonPrimitive?.content,
                                         "next" to element.remove("next")?.jsonPrimitive?.content,
                                         "data" to element.remove("data")?.let {
-                                            json.decodeFromJsonElement<SerializableChannel>(it).toUniverse(yutori)
+                                            json.decodeFromJsonElement<SerializableChannel>(it).toUniverse(null, yutori)
                                         },
                                         "duration" to element.remove("duration")?.jsonPrimitive?.int,
                                         "userId" to element.remove("user_id")?.jsonPrimitive?.content,

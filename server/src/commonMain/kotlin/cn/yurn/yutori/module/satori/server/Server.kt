@@ -11,11 +11,10 @@ import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.module.satori.SatoriServerProperties
 import kotlinx.atomicfu.atomic
 
-val Server.Companion.Satori: SatoriServer
-    get() = SatoriServer()
+fun Server.Companion.satori(alias: String? = null) = SatoriServer(alias)
 
 @BuilderMarker
-class SatoriServer : Server(), Reinstallable {
+class SatoriServer(alias: String?) : Server(alias), Reinstallable {
     var listen: String = "0.0.0.0"
     var port: Int = 8080
     var path: String = ""
@@ -30,7 +29,7 @@ class SatoriServer : Server(), Reinstallable {
     override suspend fun start(yutori: Yutori) {
         val properties = SatoriServerProperties(listen, port, path, token, version)
         connecting = true
-        service = SatoriServerService(properties, yutori)
+        service = SatoriServerService(alias, properties, yutori)
         service!!.start()
     }
 

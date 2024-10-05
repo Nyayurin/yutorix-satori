@@ -52,7 +52,7 @@ import kotlinx.serialization.json.Json
 class SatoriActionService(
     val yutori: Yutori,
     val properties: SatoriAdapterProperties
-) : AdapterActionService {
+) : AdapterActionService() {
     override suspend fun send(
         resource: String,
         method: String,
@@ -113,9 +113,9 @@ class SatoriActionService(
         val body = response.bodyAsText()
         when (resource) {
             "channel" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(yutori)
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableChannel, Channel>>(body).toUniverse(yutori)
-                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(yutori)
+                "get" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableChannel, Channel>>(body).toUniverse(null, yutori)
+                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori)
                 "update" -> Unit
                 "delete" -> Unit
                 "mute" -> Unit
@@ -123,20 +123,20 @@ class SatoriActionService(
             }
 
             "user.channel" -> when (method) {
-                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(yutori)
+                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "guild" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableGuild>(body).toUniverse(yutori)
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuild, Guild>>(body).toUniverse(yutori)
+                "get" -> Json.decodeFromString<SerializableGuild>(body).toUniverse(null, yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuild, Guild>>(body).toUniverse(null, yutori)
                 "approve" -> Unit
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "guild.member" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableGuildMember>(body).toUniverse(yutori)
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildMember, GuildMember>>(body).toUniverse(yutori)
+                "get" -> Json.decodeFromString<SerializableGuildMember>(body).toUniverse(null, yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildMember, GuildMember>>(body).toUniverse(null, yutori)
                 "kick" -> Unit
                 "mute" -> Unit
                 "approve" -> Unit
@@ -150,24 +150,24 @@ class SatoriActionService(
             }
 
             "guild.role" -> when (method) {
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildRole, GuildRole>>(body).toUniverse(yutori)
-                "create" -> Json.decodeFromString<SerializableGuildRole>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildRole, GuildRole>>(body).toUniverse(null, yutori)
+                "create" -> Json.decodeFromString<SerializableGuildRole>(body).toUniverse(null, yutori)
                 "update" -> Unit
                 "delete" -> Unit
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "login" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableLogin>(body).toUniverse(yutori)
+                "get" -> Json.decodeFromString<SerializableLogin>(body).toUniverse(null, yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "message" -> when (method) {
-                "create" -> Json.decodeFromString<List<SerializableMessage>>(body).map { it.toUniverse(yutori) }
-                "get" -> Json.decodeFromString<SerializableMessage>(body).toUniverse(yutori)
+                "create" -> Json.decodeFromString<List<SerializableMessage>>(body).map { it.toUniverse(null, yutori) }
+                "get" -> Json.decodeFromString<SerializableMessage>(body).toUniverse(null, yutori)
                 "delete" -> Unit
                 "update" -> Unit
-                "list" -> Json.decodeFromString<SerializableBidiPagingList<SerializableMessage, Message>>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializableBidiPagingList<SerializableMessage, Message>>(body).toUniverse(null, yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
@@ -175,17 +175,17 @@ class SatoriActionService(
                 "create" -> Unit
                 "delete" -> Unit
                 "clear" -> Unit
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(null, yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "user" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableUser>(body).toUniverse(yutori)
+                "get" -> Json.decodeFromString<SerializableUser>(body).toUniverse(null, yutori)
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }
 
             "friend" -> when (method) {
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(yutori)
+                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(null, yutori)
                 "approve" -> Unit
                 else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
             }

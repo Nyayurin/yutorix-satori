@@ -68,12 +68,12 @@ yutorix-satori-server = { module = "cn.yurn.yutorix:yutorix-satori-server", vers
 安装模块
 
 ```kotlin
-install(Adapter.Satori) {
+install(Adapter.satori()) {
     host = "127.0.0.1"
     port = 8080
     token = "token"
 }
-install(Server.Satori) {
+install(Server.satori()) {
     listen = "0.0.0.0"
     port = 8080
     token = "token"

@@ -12,11 +12,10 @@ import co.touchlab.kermit.Logger
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 
-val Adapter.Companion.Satori: SatoriAdapter
-    get() = SatoriAdapter()
+fun Adapter.Companion.satori(alias: String? = null) = SatoriAdapter(alias)
 
 @BuilderMarker
-class SatoriAdapter : Adapter(), Reinstallable {
+class SatoriAdapter(alias: String?) : Adapter(alias), Reinstallable {
     var host: String = "127.0.0.1"
     var port: Int = 8080
     var path: String = ""
@@ -53,7 +52,7 @@ class SatoriAdapter : Adapter(), Reinstallable {
         connecting = true
         var sequence: Number? = null
         do {
-            service = WebSocketEventService(properties, onConnect, onClose, onError, yutori, sequence)
+            service = WebSocketEventService(alias, properties, onConnect, onClose, onError, yutori, sequence)
             service!!.onStart()
             service!!.connect()
             if (connecting) {

@@ -113,7 +113,7 @@ data class SatoriServerProperties(
 )
 
 interface Convertable<U> {
-    fun toUniverse(yutori: Yutori): U
+    fun toUniverse(alias: String?, yutori: Yutori): U
 }
 
 @Serializable
@@ -135,22 +135,23 @@ class SerializableEvent(
     val role: SerializableGuildRole? = null,
     val user: SerializableUser? = null
 ) : Convertable<Event<SigningEvent>> {
-    override fun toUniverse(yutori: Yutori) = Event<SigningEvent>(
+    override fun toUniverse(alias: String?, yutori: Yutori) = Event<SigningEvent>(
+        alias = alias,
         id = id,
         type = type,
         platform = platform,
         selfId = selfId,
         timestamp = timestamp,
-        argv = argv?.toUniverse(yutori),
-        button = button?.toUniverse(yutori),
-        channel = channel?.toUniverse(yutori),
-        guild = guild?.toUniverse(yutori),
-        login = login?.toUniverse(yutori),
-        member = member?.toUniverse(yutori),
-        message = message?.toUniverse(yutori),
-        operator = operator?.toUniverse(yutori),
-        role = role?.toUniverse(yutori),
-        user = user?.toUniverse(yutori)
+        argv = argv?.toUniverse(alias, yutori),
+        button = button?.toUniverse(alias, yutori),
+        channel = channel?.toUniverse(alias, yutori),
+        guild = guild?.toUniverse(alias, yutori),
+        login = login?.toUniverse(alias, yutori),
+        member = member?.toUniverse(alias, yutori),
+        message = message?.toUniverse(alias, yutori),
+        operator = operator?.toUniverse(alias, yutori),
+        role = role?.toUniverse(alias, yutori),
+        user = user?.toUniverse(alias, yutori)
     )
 
     companion object {
@@ -182,7 +183,7 @@ sealed class SerializableInteraction {
         @Serializable(DynamicLookupSerializer::class)
         val options: Any
     ) : SerializableInteraction(), Convertable<Interaction.Argv> {
-        override fun toUniverse(yutori: Yutori) = Interaction.Argv(
+        override fun toUniverse(alias: String?, yutori: Yutori) = Interaction.Argv(
             name = name,
             arguments = arguments,
             options = options
@@ -199,7 +200,7 @@ sealed class SerializableInteraction {
 
     @Serializable
     data class Button(val id: String) : SerializableInteraction(), Convertable<Interaction.Button> {
-        override fun toUniverse(yutori: Yutori) = Interaction.Button(id = id)
+        override fun toUniverse(alias: String?, yutori: Yutori) = Interaction.Button(id = id)
 
         companion object {
             fun fromUniverse(universe: Interaction.Button) = Button(id = universe.id)
@@ -215,7 +216,7 @@ data class SerializableChannel(
     @SerialName("parent_id")
     val parentId: String? = null
 ) : Convertable<Channel> {
-    override fun toUniverse(yutori: Yutori) = Channel(
+    override fun toUniverse(alias: String?, yutori: Yutori) = Channel(
         id = id,
         type = type,
         name = name,
@@ -238,7 +239,7 @@ data class SerializableGuild(
     val name: String? = null,
     val avatar: String? = null
 ) : Convertable<Guild> {
-    override fun toUniverse(yutori: Yutori) = Guild(
+    override fun toUniverse(alias: String?, yutori: Yutori) = Guild(
         id = id,
         name = name,
         avatar = avatar
@@ -263,10 +264,10 @@ data class SerializableLogin(
     @SerialName("proxy_urls")
     val proxyUrls: List<String> = listOf(),
 ) : Convertable<Login> {
-    override fun toUniverse(yutori: Yutori) = Login(
+    override fun toUniverse(alias: String?, yutori: Yutori) = Login(
         adapter = adapter,
         platform = platform,
-        user = user?.toUniverse(yutori),
+        user = user?.toUniverse(alias, yutori),
         status = status,
         features = features,
         proxyUrls = proxyUrls
@@ -292,8 +293,8 @@ data class SerializableGuildMember(
     @SerialName("joined_at")
     val joinedAt: Long? = null
 ) : Convertable<GuildMember> {
-    override fun toUniverse(yutori: Yutori) = GuildMember(
-        user = user?.toUniverse(yutori),
+    override fun toUniverse(alias: String?, yutori: Yutori) = GuildMember(
+        user = user?.toUniverse(alias, yutori),
         nick = nick,
         avatar = avatar,
         joinedAt = joinedAt
@@ -322,13 +323,13 @@ data class SerializableMessage(
     @SerialName("updated_at")
     val updatedAt: Long? = null
 ) : Convertable<Message> {
-    override fun toUniverse(yutori: Yutori) = Message(
+    override fun toUniverse(alias: String?, yutori: Yutori) = Message(
         id = id,
         content = content.deserialize(yutori),
-        channel = channel?.toUniverse(yutori),
-        guild = guild?.toUniverse(yutori),
-        member = member?.toUniverse(yutori),
-        user = user?.toUniverse(yutori),
+        channel = channel?.toUniverse(alias, yutori),
+        guild = guild?.toUniverse(alias, yutori),
+        member = member?.toUniverse(alias, yutori),
+        user = user?.toUniverse(alias, yutori),
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -356,7 +357,7 @@ data class SerializableUser(
     @SerialName("is_bot")
     val isBot: Boolean? = null
 ) : Convertable<User> {
-    override fun toUniverse(yutori: Yutori) = User(
+    override fun toUniverse(alias: String?, yutori: Yutori) = User(
         id = id,
         name = name,
         nick = nick,
@@ -380,7 +381,7 @@ data class SerializableGuildRole(
     val id: String,
     val name: String? = null
 ) : Convertable<GuildRole> {
-    override fun toUniverse(yutori: Yutori) = GuildRole(
+    override fun toUniverse(alias: String?, yutori: Yutori) = GuildRole(
         id = id,
         name = name
     )
@@ -398,10 +399,10 @@ data class SerializablePagingList<T, U>(
     val data: List<T>,
     val next: String? = null
 ) : Convertable<PagingList<U>> {
-    override fun toUniverse(yutori: Yutori) = PagingList(
+    override fun toUniverse(alias: String?, yutori: Yutori) = PagingList(
         data = data.map {
             if (it is Convertable<*>) {
-                it.toUniverse(yutori)
+                it.toUniverse(alias, yutori)
             } else {
                 it
             } as U
@@ -437,10 +438,10 @@ data class SerializableBidiPagingList<T, U>(
         override fun toString() = value
     }
 
-    override fun toUniverse(yutori: Yutori) = BidiPagingList(
+    override fun toUniverse(alias: String?, yutori: Yutori) = BidiPagingList(
         data = data.map {
             if (it is Convertable<*>) {
-                it.toUniverse(yutori)
+                it.toUniverse(alias, yutori)
             } else {
                 it
             } as U

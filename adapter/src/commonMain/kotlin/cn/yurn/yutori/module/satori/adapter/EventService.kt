@@ -40,13 +40,14 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
 class WebSocketEventService(
+    alias: String?,
     val properties: SatoriAdapterProperties,
     val onConnect: suspend WebSocketEventService.(List<Login>) -> Unit = { },
     val onClose: suspend () -> Unit = { },
     val onError: suspend () -> Unit = { },
     val yutori: Yutori,
     var sequence: Number? = null
-) : AdapterEventService {
+) : AdapterEventService(alias) {
     private val actionsList = mutableListOf<RootActions>()
     val service = SatoriActionService(yutori, properties)
     private var job by atomic<Job?>(null)
@@ -94,6 +95,7 @@ class WebSocketEventService(
                                         ready = true
                                         for (login in signal.body.logins) {
                                             val actions = RootActions(
+                                                alias = alias,
                                                 platform = login.platform!!,
                                                 userId = login.user!!.id,
                                                 service = service,
@@ -102,7 +104,7 @@ class WebSocketEventService(
                                             actionsList += actions
                                             yutori.actionsList += actions
                                         }
-                                        onConnect(signal.body.logins.map { it.toUniverse(yutori) })
+                                        onConnect(signal.body.logins.map { it.toUniverse(null, yutori) })
                                         Logger.i(name) { "成功建立事件推送服务: ${signal.body.logins}" }
                                         launch {
                                             do {
@@ -115,7 +117,7 @@ class WebSocketEventService(
                                         }
                                     }
 
-                                    is EventSignal -> launch { onEvent(signal.body.toUniverse(yutori)) }
+                                    is EventSignal -> launch { onEvent(signal.body.toUniverse(alias, yutori)) }
                                     is PongSignal -> {
                                         isReceivedPong = true
                                         Logger.d(name) { "收到 PONG" }
@@ -168,6 +170,7 @@ class WebSocketEventService(
                     actions -> actions.platform == event.platform && actions.userId == event.selfId
             } ?: run {
                 val actions = RootActions(
+                    alias = alias,
                     platform = event.platform,
                     userId = event.selfId,
                     service = service,
