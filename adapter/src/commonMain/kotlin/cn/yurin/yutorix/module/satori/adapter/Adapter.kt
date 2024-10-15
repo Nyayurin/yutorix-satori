@@ -2,11 +2,11 @@
 
 package cn.yurin.yutorix.module.satori.adapter
 
-import cn.yurn.yutori.Adapter
-import cn.yurn.yutori.BuilderMarker
-import cn.yurn.yutori.Login
-import cn.yurn.yutori.Reinstallable
-import cn.yurn.yutori.Yutori
+import cn.yurin.yutori.Adapter
+import cn.yurin.yutori.BuilderMarker
+import cn.yurin.yutori.Login
+import cn.yurin.yutori.Reinstallable
+import cn.yurin.yutori.Yutori
 import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
 import co.touchlab.kermit.Logger
 import kotlinx.atomicfu.atomic

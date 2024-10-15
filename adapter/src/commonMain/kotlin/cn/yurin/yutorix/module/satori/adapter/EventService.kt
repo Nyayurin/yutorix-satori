@@ -2,14 +2,15 @@
 
 package cn.yurin.yutorix.module.satori.adapter
 
-import cn.yurn.yutori.AdapterContext
-import cn.yurn.yutori.AdapterEventService
-import cn.yurn.yutori.Event
-import cn.yurn.yutori.Login
-import cn.yurn.yutori.MessageEvents
-import cn.yurn.yutori.RootActions
-import cn.yurn.yutori.SigningEvent
-import cn.yurn.yutori.Yutori
+import cn.yurin.yutori.AdapterContext
+import cn.yurin.yutori.AdapterEventService
+import cn.yurin.yutori.Event
+import cn.yurin.yutori.Login
+import cn.yurin.yutori.MessageEvents
+import cn.yurin.yutori.RootActions
+import cn.yurin.yutori.SigningEvent
+import cn.yurin.yutori.Yutori
+import cn.yurin.yutori.nick
 import cn.yurin.yutorix.module.satori.EventSignal
 import cn.yurin.yutorix.module.satori.Identify
 import cn.yurin.yutorix.module.satori.IdentifySignal
@@ -18,7 +19,6 @@ import cn.yurin.yutorix.module.satori.PongSignal
 import cn.yurin.yutorix.module.satori.ReadySignal
 import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
 import cn.yurin.yutorix.module.satori.Signal
-import cn.yurn.yutori.nick
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets
@@ -76,7 +76,14 @@ class WebSocketEventService(
                             actionsList.clear()
                             var ready = false
                             var isReceivedPong: Boolean
-                            sendSerialized(IdentifySignal(Identify(properties.token, sequence?.toInt())))
+                            sendSerialized(
+                                IdentifySignal(
+                                    Identify(
+                                        properties.token,
+                                        sequence?.toInt()
+                                    )
+                                )
+                            )
                             Logger.i(name) { "成功建立 WebSocket 连接, 尝试建立事件推送服务" }
                             launch {
                                 delay(10000)
@@ -88,7 +95,8 @@ class WebSocketEventService(
                                 }
                             }
                             while (isActive) try {
-                                val receive = (incoming.receive() as? Frame.Text ?: continue).readText()
+                                val receive =
+                                    (incoming.receive() as? Frame.Text ?: continue).readText()
                                 Logger.d(name) { "接收信令: $receive" }
                                 when (val signal = json.decodeFromString<Signal>(receive)) {
                                     is ReadySignal -> {
@@ -104,7 +112,12 @@ class WebSocketEventService(
                                             actionsList += actions
                                             yutori.actionsList += actions
                                         }
-                                        onConnect(signal.body.logins.map { it.toUniverse(null, yutori) })
+                                        onConnect(signal.body.logins.map {
+                                            it.toUniverse(
+                                                null,
+                                                yutori
+                                            )
+                                        })
                                         Logger.i(name) { "成功建立事件推送服务: ${signal.body.logins}" }
                                         launch {
                                             do {
@@ -117,7 +130,15 @@ class WebSocketEventService(
                                         }
                                     }
 
-                                    is EventSignal -> launch { onEvent(signal.body.toUniverse(alias, yutori)) }
+                                    is EventSignal -> launch {
+                                        onEvent(
+                                            signal.body.toUniverse(
+                                                alias,
+                                                yutori
+                                            )
+                                        )
+                                    }
+
                                     is PongSignal -> {
                                         isReceivedPong = true
                                         Logger.d(name) { "收到 PONG" }
@@ -166,8 +187,8 @@ class WebSocketEventService(
             }
             Logger.d(name) { "事件详细信息: $event" }
             sequence = event.id
-            val actions = actionsList.find {
-                    actions -> actions.platform == event.platform && actions.userId == event.selfId
+            val actions = actionsList.find { actions ->
+                actions.platform == event.platform && actions.userId == event.selfId
             } ?: run {
                 val actions = RootActions(
                     alias = alias,

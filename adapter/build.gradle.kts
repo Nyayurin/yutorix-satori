@@ -93,26 +93,6 @@ kotlin {
             api(libs.ktor.client.darwin)
         }
 
-        iosX64Main.dependencies {
-            implementation(libs.yutori.ios.x64)
-        }
-
-        iosArm64Main.dependencies {
-            implementation(libs.yutori.ios.arm64)
-        }
-
-        iosSimulatorArm64Main.dependencies {
-            implementation(libs.yutori.ios.simulator.arm64)
-        }
-
-        macosX64Main.dependencies {
-            implementation(libs.yutori.macos.x64)
-        }
-
-        macosArm64Main.dependencies {
-            implementation(libs.yutori.macos.arm64)
-        }
-
         linuxMain.dependencies {
             api(libs.ktor.client.curl)
         }

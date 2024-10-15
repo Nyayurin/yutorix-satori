@@ -2,12 +2,12 @@
 
 package cn.yurin.yutorix.module.satori.server
 
-import cn.yurn.yutori.BuilderMarker
-import cn.yurn.yutori.Event
-import cn.yurn.yutori.Reinstallable
-import cn.yurn.yutori.Server
-import cn.yurn.yutori.SigningEvent
-import cn.yurn.yutori.Yutori
+import cn.yurin.yutori.BuilderMarker
+import cn.yurin.yutori.Event
+import cn.yurin.yutori.Reinstallable
+import cn.yurin.yutori.Server
+import cn.yurin.yutori.SigningEvent
+import cn.yurin.yutori.Yutori
 import cn.yurin.yutorix.module.satori.SatoriServerProperties
 import kotlinx.atomicfu.atomic
 

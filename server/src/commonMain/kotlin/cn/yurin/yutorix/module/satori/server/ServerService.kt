@@ -1,13 +1,13 @@
 package cn.yurin.yutorix.module.satori.server
 
-import cn.yurn.yutori.Event
-import cn.yurn.yutori.Login
-import cn.yurn.yutori.Request
-import cn.yurn.yutori.Response
-import cn.yurn.yutori.ServerContext
-import cn.yurn.yutori.ServerService
-import cn.yurn.yutori.SigningEvent
-import cn.yurn.yutori.Yutori
+import cn.yurin.yutori.Event
+import cn.yurin.yutori.Login
+import cn.yurin.yutori.Request
+import cn.yurin.yutori.Response
+import cn.yurin.yutori.ServerContext
+import cn.yurin.yutori.ServerService
+import cn.yurin.yutori.SigningEvent
+import cn.yurin.yutori.Yutori
 import cn.yurin.yutorix.module.satori.EventSignal
 import cn.yurin.yutorix.module.satori.IdentifySignal
 import cn.yurin.yutorix.module.satori.PingSignal

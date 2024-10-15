@@ -7,16 +7,16 @@
 
 package cn.yurin.yutorix.module.satori.adapter
 
-import cn.yurn.yutori.AdapterActionService
-import cn.yurn.yutori.Channel
-import cn.yurn.yutori.FormData
-import cn.yurn.yutori.Guild
-import cn.yurn.yutori.GuildMember
-import cn.yurn.yutori.GuildRole
-import cn.yurn.yutori.Message
-import cn.yurn.yutori.User
-import cn.yurn.yutori.Yutori
-import cn.yurn.yutori.message.element.MessageElement
+import cn.yurin.yutori.AdapterActionService
+import cn.yurin.yutori.Channel
+import cn.yurin.yutori.FormData
+import cn.yurin.yutori.Guild
+import cn.yurin.yutori.GuildMember
+import cn.yurin.yutori.GuildRole
+import cn.yurin.yutori.Message
+import cn.yurin.yutori.User
+import cn.yurin.yutori.Yutori
+import cn.yurin.yutori.message.element.MessageElement
 import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
 import cn.yurin.yutorix.module.satori.SerializableBidiPagingList
 import cn.yurin.yutorix.module.satori.SerializableChannel

@@ -2,10 +2,9 @@
 
 package cn.yurin.yutorix.module.satori
 
-import cn.yurn.yutori.Yutori
-import cn.yurn.yutori.message.element.MessageElement
-import cn.yurn.yutori.message.element.NodeMessageElement
-import cn.yurn.yutori.message.element.Text
+import cn.yurin.yutori.Yutori
+import cn.yurin.yutori.message.element.MessageElement
+import cn.yurin.yutori.message.element.Text
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Comment
 import com.fleeksoft.ksoup.nodes.DocumentType
@@ -33,41 +32,31 @@ fun String.deserialize(yutori: Yutori): List<MessageElement> {
 private fun parseElement(yutori: Yutori, node: Node): MessageElement = when (node) {
     is TextNode -> Text(node.text())
     is Element -> {
-        val container = yutori.elements[node.tagName()]
-        val attributes = buildMap<String, Any?> {
+        val container = yutori.elements[when (val name = node.tagName()) {
+            "a" -> "href"
+            "img" -> "image"
+            "b" -> "bold"
+            "i" -> "idiomatic"
+            "u" -> "underline"
+            "s" -> "strikethrough"
+            "del" -> "delete"
+            "p" -> "paragraph"
+            else -> name
+        }]
+        val properties = buildMap {
             for ((key, value) in node.attributes()) {
                 put(key, value)
             }
-        }
-        container?.invoke(attributes)?.apply {
-            for (attr in node.attributes()) {
-                val key = attr.key
-                val value = attr.value
-                this.properties[key] =
-                    when (val default = container.propertiesDefault[key] ?: "") {
-                        is String -> value
-                        is Number -> if (value.contains(".")) {
-                            value.toDouble()
-                        } else {
-                            runCatching {
-                                value.toInt()
-                            }.getOrElse {
-                                value.toLong()
-                            }
-                        }
-
-                        is Boolean -> if (attr.toString().contains("=")) {
-                            value.toBooleanStrict()
-                        } else {
-                            true
-                        }
-
-                        else -> throw RuntimeException("Message element property parse failed: ${default::class}")
-                    }
+        }.toMutableMap()
+        val children = buildList {
+            for (child in node.childNodes()) {
+                add(parseElement(yutori, child))
             }
-            for (child in node.childNodes()) this.children += parseElement(yutori, child)
-        } ?: NodeMessageElement(
-            node.tagName()
+        }
+        container?.invoke(properties, children) ?: MessageElement(
+            node.tagName(),
+            properties,
+            children
         )
     }
 
@@ -76,14 +65,22 @@ private fun parseElement(yutori: Yutori, node: Node): MessageElement = when (nod
 
 fun List<MessageElement>.serialize() = joinToString("") { it.serialize() }
 
-fun MessageElement.serialize() = when (this) {
-    is Text -> serialize()
-    is NodeMessageElement -> serialize()
-    else -> throw UnsupportedOperationException("Unknown element type: $this")
-}
-
-private fun Text.serialize() = text.encode()
-private fun NodeMessageElement.serialize() = buildString {
+private fun MessageElement.serialize() = buildString {
+    if (this@serialize is Text) {
+        append(content.encode())
+        return@buildString
+    }
+    val nodeName = when (elementName) {
+        "href" -> "a"
+        "image" -> "img"
+        "bold" -> "b"
+        "idiomatic" -> "i"
+        "underline" -> "u"
+        "strikethrough" -> "s"
+        "delete" -> "del"
+        "paragraph" -> "p"
+        else -> elementName
+    }
     append("<$nodeName")
     for (item in properties) {
         val key = item.key
