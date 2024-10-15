@@ -68,7 +68,7 @@ kotlin {
 }
 
 android {
-    namespace = "cn.yurn.yutorix.satori.server"
+    namespace = "cn.yurin.yutorix.satori.server"
     compileSdk = 34
 
     defaultConfig {
@@ -86,17 +86,17 @@ publishing {
             name = "Yutorix-Satori-Server"
             version = System.getenv("VERSION")
             description = "Kotlin Multiplatform library"
-            url = "https://github.com/Nyayurn/yutorix-satori"
+            url = "https://github.com/Nyayurin/yutorix-satori"
 
             developers {
                 developer {
-                    id = "Nyayurn"
-                    name = "Yurn"
+                    id = "Nyayurin"
+                    name = "Yurin"
                     email = "Nyayurn@outlook.com"
                 }
             }
             scm {
-                url = "https://github.com/Nyayurn/yutorix-satori"
+                url = "https://github.com/Nyayurin/yutorix-satori"
             }
         }
     }

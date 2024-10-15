@@ -1,13 +1,13 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "unused", "HttpUrlsUsage")
 
-package cn.yurn.yutori.module.satori.adapter
+package cn.yurin.yutorix.module.satori.adapter
 
 import cn.yurn.yutori.Adapter
 import cn.yurn.yutori.BuilderMarker
 import cn.yurn.yutori.Login
 import cn.yurn.yutori.Reinstallable
 import cn.yurn.yutori.Yutori
-import cn.yurn.yutori.module.satori.SatoriAdapterProperties
+import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
 import co.touchlab.kermit.Logger
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay

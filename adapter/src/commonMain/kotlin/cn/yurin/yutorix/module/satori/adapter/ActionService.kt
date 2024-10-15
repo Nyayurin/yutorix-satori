@@ -5,7 +5,7 @@
     "UastIncorrectHttpHeaderInspection", "UNCHECKED_CAST"
 )
 
-package cn.yurn.yutori.module.satori.adapter
+package cn.yurin.yutorix.module.satori.adapter
 
 import cn.yurn.yutori.AdapterActionService
 import cn.yurn.yutori.Channel
@@ -17,17 +17,17 @@ import cn.yurn.yutori.Message
 import cn.yurn.yutori.User
 import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.message.element.MessageElement
-import cn.yurn.yutori.module.satori.SatoriAdapterProperties
-import cn.yurn.yutori.module.satori.SerializableBidiPagingList
-import cn.yurn.yutori.module.satori.SerializableChannel
-import cn.yurn.yutori.module.satori.SerializableGuild
-import cn.yurn.yutori.module.satori.SerializableGuildMember
-import cn.yurn.yutori.module.satori.SerializableGuildRole
-import cn.yurn.yutori.module.satori.SerializableLogin
-import cn.yurn.yutori.module.satori.SerializableMessage
-import cn.yurn.yutori.module.satori.SerializablePagingList
-import cn.yurn.yutori.module.satori.SerializableUser
-import cn.yurn.yutori.module.satori.serialize
+import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
+import cn.yurin.yutorix.module.satori.SerializableBidiPagingList
+import cn.yurin.yutorix.module.satori.SerializableChannel
+import cn.yurin.yutorix.module.satori.SerializableGuild
+import cn.yurin.yutorix.module.satori.SerializableGuildMember
+import cn.yurin.yutorix.module.satori.SerializableGuildRole
+import cn.yurin.yutorix.module.satori.SerializableLogin
+import cn.yurin.yutorix.module.satori.SerializableMessage
+import cn.yurin.yutorix.module.satori.SerializablePagingList
+import cn.yurin.yutorix.module.satori.SerializableUser
+import cn.yurin.yutorix.module.satori.serialize
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body

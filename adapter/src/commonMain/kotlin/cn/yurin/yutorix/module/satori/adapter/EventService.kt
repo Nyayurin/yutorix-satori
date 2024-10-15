@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "HttpUrlsUsage")
 
-package cn.yurn.yutori.module.satori.adapter
+package cn.yurin.yutorix.module.satori.adapter
 
 import cn.yurn.yutori.AdapterContext
 import cn.yurn.yutori.AdapterEventService
@@ -10,14 +10,14 @@ import cn.yurn.yutori.MessageEvents
 import cn.yurn.yutori.RootActions
 import cn.yurn.yutori.SigningEvent
 import cn.yurn.yutori.Yutori
-import cn.yurn.yutori.module.satori.EventSignal
-import cn.yurn.yutori.module.satori.Identify
-import cn.yurn.yutori.module.satori.IdentifySignal
-import cn.yurn.yutori.module.satori.PingSignal
-import cn.yurn.yutori.module.satori.PongSignal
-import cn.yurn.yutori.module.satori.ReadySignal
-import cn.yurn.yutori.module.satori.SatoriAdapterProperties
-import cn.yurn.yutori.module.satori.Signal
+import cn.yurin.yutorix.module.satori.EventSignal
+import cn.yurin.yutorix.module.satori.Identify
+import cn.yurin.yutorix.module.satori.IdentifySignal
+import cn.yurin.yutorix.module.satori.PingSignal
+import cn.yurin.yutorix.module.satori.PongSignal
+import cn.yurin.yutorix.module.satori.ReadySignal
+import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
+import cn.yurin.yutorix.module.satori.Signal
 import cn.yurn.yutori.nick
 import co.touchlab.kermit.Logger
 import io.ktor.client.HttpClient

@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package cn.yurn.yutori.module.satori
+package cn.yurin.yutorix.module.satori
 
 import cn.yurn.yutori.Yutori
 import cn.yurn.yutori.message.element.MessageElement

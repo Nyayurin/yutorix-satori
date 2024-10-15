@@ -1,6 +1,6 @@
 @file:Suppress("MemberVisibilityCanBePrivate", "unused", "HttpUrlsUsage")
 
-package cn.yurn.yutori.module.satori.server
+package cn.yurin.yutorix.module.satori.server
 
 import cn.yurn.yutori.BuilderMarker
 import cn.yurn.yutori.Event
@@ -8,7 +8,7 @@ import cn.yurn.yutori.Reinstallable
 import cn.yurn.yutori.Server
 import cn.yurn.yutori.SigningEvent
 import cn.yurn.yutori.Yutori
-import cn.yurn.yutori.module.satori.SatoriServerProperties
+import cn.yurin.yutorix.module.satori.SatoriServerProperties
 import kotlinx.atomicfu.atomic
 
 fun Server.Companion.satori(alias: String? = null) = SatoriServer(alias)

@@ -1,6 +1,6 @@
 @file:Suppress("UNCHECKED_CAST")
 
-package cn.yurn.yutori.module.satori
+package cn.yurin.yutorix.module.satori
 
 import cn.yurn.yutori.BidiPagingList
 import cn.yurn.yutori.Channel

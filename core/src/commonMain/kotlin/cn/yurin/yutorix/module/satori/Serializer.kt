@@ -1,4 +1,4 @@
-package cn.yurn.yutori.module.satori
+package cn.yurin.yutorix.module.satori
 
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi

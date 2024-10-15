@@ -8,13 +8,13 @@ plugins {
 subprojects {
     apply(plugin = "maven-publish")
 
-    group = "cn.yurn.yutorix"
+    group = "cn.yurin.yutorix"
 
     configure<PublishingExtension> {
         repositories {
             maven {
                 name = "GitHubPackages"
-                url = uri("https://maven.pkg.github.com/Nyayurn/yutorix-satori")
+                url = uri("https://maven.pkg.github.com/Nyayurin/yutorix-satori")
                 credentials {
                     username = System.getenv("GITHUB_ACTOR")
                     password = System.getenv("GITHUB_TOKEN")
