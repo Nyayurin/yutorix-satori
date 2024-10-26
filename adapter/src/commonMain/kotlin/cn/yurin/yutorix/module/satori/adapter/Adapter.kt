@@ -15,7 +15,10 @@ import kotlinx.coroutines.delay
 fun Adapter.Companion.satori(alias: String? = null) = SatoriAdapter(alias)
 
 @BuilderMarker
-class SatoriAdapter(alias: String?) : Adapter(alias), Reinstallable {
+class SatoriAdapter(
+    alias: String?,
+) : Adapter(alias),
+    Reinstallable {
     var host: String = "127.0.0.1"
     var port: Int = 8080
     var path: String = ""
@@ -45,6 +48,7 @@ class SatoriAdapter(alias: String?) : Adapter(alias), Reinstallable {
     }
 
     override fun install(yutori: Yutori) {}
+
     override fun uninstall(yutori: Yutori) {}
 
     override suspend fun start(yutori: Yutori) {
@@ -52,7 +56,16 @@ class SatoriAdapter(alias: String?) : Adapter(alias), Reinstallable {
         connecting = true
         var sequence: Number? = null
         do {
-            service = WebSocketEventService(alias, properties, onConnect, onClose, onError, yutori, sequence)
+            service =
+                WebSocketEventService(
+                    alias,
+                    properties,
+                    onConnect,
+                    onClose,
+                    onError,
+                    yutori,
+                    sequence,
+                )
             service!!.onStart()
             service!!.connect()
             if (connecting) {

@@ -14,7 +14,10 @@ import kotlinx.atomicfu.atomic
 fun Server.Companion.satori(alias: String? = null) = SatoriServer(alias)
 
 @BuilderMarker
-class SatoriServer(alias: String?) : Server(alias), Reinstallable {
+class SatoriServer(
+    alias: String?,
+) : Server(alias),
+    Reinstallable {
     var listen: String = "0.0.0.0"
     var port: Int = 8080
     var path: String = ""
@@ -24,6 +27,7 @@ class SatoriServer(alias: String?) : Server(alias), Reinstallable {
     private var service: SatoriServerService? by atomic(null)
 
     override fun install(yutori: Yutori) {}
+
     override fun uninstall(yutori: Yutori) {}
 
     override suspend fun start(yutori: Yutori) {

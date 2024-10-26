@@ -2,7 +2,8 @@
     "MemberVisibilityCanBePrivate",
     "unused",
     "HttpUrlsUsage",
-    "UastIncorrectHttpHeaderInspection", "UNCHECKED_CAST"
+    "UastIncorrectHttpHeaderInspection",
+    "UNCHECKED_CAST",
 )
 
 package cn.yurin.yutorix.module.satori.adapter
@@ -51,188 +52,310 @@ import kotlinx.serialization.json.Json
 
 class SatoriActionService(
     val yutori: Yutori,
-    val properties: SatoriAdapterProperties
+    val properties: SatoriAdapterProperties,
 ) : AdapterActionService() {
-    override suspend fun send(
+    override suspend fun <T> send(
         resource: String,
         method: String,
         platform: String?,
         userId: String?,
-        content: Map<String, Any?>
-    ): Any = HttpClient {
-        install(ContentNegotiation) {
-            json(Json {
-                ignoreUnknownKeys = true
-            })
-        }
-    }.use { client ->
-        val response = client.post {
-            url {
-                host = properties.host
-                port = properties.port
-                appendPathSegments(properties.path, properties.version, "$resource.$method")
+        content: Map<String, Any?>,
+    ): Result<T> =
+        HttpClient {
+            install(ContentNegotiation) {
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                    },
+                )
             }
-            contentType(ContentType.Application.Json)
-            headers {
-                properties.token?.let {
-                    append(
-                        HttpHeaders.Authorization,
-                        "Bearer ${properties.token}"
-                    )
-                }
-                platform?.let { append("Satori-Platform", platform) }
-                userId?.let { append("Satori-User-ID", userId) }
-            }
-            setBody(content.entries.filter { it.value != null }
-                .joinToString(",", "{", "}") { (key, value) ->
-                    buildString {
-                        append("\"$key\":")
-                        append(
-                            when (value) {
-                                is String -> "\"${value.replace("\"", "\\\"")}\""
-                                is List<*> -> "\"${
-                                    (value as List<MessageElement>).serialize()
-                                        .replace("\n", "\\n")
-                                        .replace("\"", "\\\"")
-                                }\""
-
-                                else -> value.toString()
-                            }
-                        )
+        }.use { client ->
+            val response =
+                client.post {
+                    url {
+                        host = properties.host
+                        port = properties.port
+                        appendPathSegments(properties.path, properties.version, "$resource.$method")
                     }
-                })
-            Logger.d(yutori.name) {
-                """
-                Satori Action Request: url: ${this.url},
-                    headers: ${this.headers.build()},
-                    body: ${this.body}
-                """.trimIndent()
+                    contentType(ContentType.Application.Json)
+                    headers {
+                        properties.token?.let {
+                            append(
+                                HttpHeaders.Authorization,
+                                "Bearer ${properties.token}",
+                            )
+                        }
+                        platform?.let { append("Satori-Platform", platform) }
+                        userId?.let { append("Satori-User-ID", userId) }
+                    }
+                    setBody(
+                        content.entries
+                            .filter { it.value != null }
+                            .joinToString(",", "{", "}") { (key, value) ->
+                                buildString {
+                                    append("\"$key\":")
+                                    append(
+                                        when (value) {
+                                            is String -> "\"${value.replace("\"", "\\\"")}\""
+                                            is List<*> ->
+                                                "\"${
+                                                    (value as List<MessageElement>).serialize()
+                                                        .replace("\n", "\\n").replace("\"", "\\\"")
+                                                }\""
+
+                                            else -> value.toString()
+                                        },
+                                    )
+                                }
+                            },
+                    )
+                    Logger.d(yutori.name) {
+                        """
+                        Satori Action Request: url: ${this.url},
+                            headers: ${this.headers.build()},
+                            body: ${this.body}
+                        """.trimIndent()
+                    }
+                }
+            Logger.d(yutori.name) { "Satori Action Response: $response" }
+            val body = response.bodyAsText()
+            when (resource) {
+                "channel" ->
+                    when (method) {
+                        "get" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializablePagingList<SerializableChannel, Channel>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        "create" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        "update" -> Result.success(Unit as T)
+                        "delete" -> Result.success(Unit as T)
+                        "mute" -> Result.success(Unit as T)
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "user.channel" ->
+                    when (method) {
+                        "create" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "guild" ->
+                    when (method) {
+                        "get" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableGuild>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializablePagingList<SerializableGuild, Guild>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        "approve" -> Result.success(Unit as T)
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "guild.member" ->
+                    when (method) {
+                        "get" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializableGuildMember>(body)
+                                    .toUniverse(null, yutori) as T,
+                            )
+
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializablePagingList<SerializableGuildMember, GuildMember>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        "kick" -> Result.success(Unit as T)
+                        "mute" -> Result.success(Unit as T)
+                        "approve" -> Result.success(Unit as T)
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "guild.member.role" ->
+                    when (method) {
+                        "set" -> Result.success(Unit as T)
+                        "unset" -> Result.success(Unit as T)
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "guild.role" ->
+                    when (method) {
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializablePagingList<SerializableGuildRole, GuildRole>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        "create" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializableGuildRole>(body)
+                                    .toUniverse(null, yutori) as T,
+                            )
+
+                        "update" -> Result.success(Unit as T)
+                        "delete" -> Result.success(Unit as T)
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "login" ->
+                    when (method) {
+                        "get" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableLogin>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "message" ->
+                    when (method) {
+                        "create" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<List<SerializableMessage>>(body)
+                                    .map { it.toUniverse(null, yutori) } as T,
+                            )
+
+                        "get" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableMessage>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        "delete" -> Result.success(Unit as T)
+                        "update" -> Result.success(Unit as T)
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializableBidiPagingList<SerializableMessage, Message>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "reaction" ->
+                    when (method) {
+                        "create" -> Result.success(Unit as T)
+                        "delete" -> Result.success(Unit as T)
+                        "clear" -> Result.success(Unit as T)
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializablePagingList<SerializableUser, User>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "user" ->
+                    when (method) {
+                        "get" ->
+                            Result.success(
+                                Json.decodeFromString<SerializableUser>(body).toUniverse(null, yutori) as T,
+                            )
+
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                "friend" ->
+                    when (method) {
+                        "list" ->
+                            Result.success(
+                                Json
+                                    .decodeFromString<SerializablePagingList<SerializableUser, User>>(
+                                        body,
+                                    ).toUniverse(null, yutori) as T,
+                            )
+
+                        "approve" -> Result.success(Unit as T)
+                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+                    }
+
+                else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
             }
         }
-        Logger.d(yutori.name) { "Satori Action Response: $response" }
-        val body = response.bodyAsText()
-        when (resource) {
-            "channel" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori)
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableChannel, Channel>>(body).toUniverse(null, yutori)
-                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori)
-                "update" -> Unit
-                "delete" -> Unit
-                "mute" -> Unit
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "user.channel" -> when (method) {
-                "create" -> Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori)
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "guild" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableGuild>(body).toUniverse(null, yutori)
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuild, Guild>>(body).toUniverse(null, yutori)
-                "approve" -> Unit
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "guild.member" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableGuildMember>(body).toUniverse(null, yutori)
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildMember, GuildMember>>(body).toUniverse(null, yutori)
-                "kick" -> Unit
-                "mute" -> Unit
-                "approve" -> Unit
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "guild.member.role" -> when (method) {
-                "set" -> Unit
-                "unset" -> Unit
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "guild.role" -> when (method) {
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableGuildRole, GuildRole>>(body).toUniverse(null, yutori)
-                "create" -> Json.decodeFromString<SerializableGuildRole>(body).toUniverse(null, yutori)
-                "update" -> Unit
-                "delete" -> Unit
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "login" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableLogin>(body).toUniverse(null, yutori)
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "message" -> when (method) {
-                "create" -> Json.decodeFromString<List<SerializableMessage>>(body).map { it.toUniverse(null, yutori) }
-                "get" -> Json.decodeFromString<SerializableMessage>(body).toUniverse(null, yutori)
-                "delete" -> Unit
-                "update" -> Unit
-                "list" -> Json.decodeFromString<SerializableBidiPagingList<SerializableMessage, Message>>(body).toUniverse(null, yutori)
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "reaction" -> when (method) {
-                "create" -> Unit
-                "delete" -> Unit
-                "clear" -> Unit
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(null, yutori)
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "user" -> when (method) {
-                "get" -> Json.decodeFromString<SerializableUser>(body).toUniverse(null, yutori)
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            "friend" -> when (method) {
-                "list" -> Json.decodeFromString<SerializablePagingList<SerializableUser, User>>(body).toUniverse(null, yutori)
-                "approve" -> Unit
-                else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-            }
-
-            else -> throw UnsupportedOperationException("Unsupported action: $resource.$method")
-        }
-    }
 
     override suspend fun upload(
         resource: String,
         method: String,
         platform: String,
         userId: String,
-        content: List<FormData>
-    ): Map<String, String> =
+        content: List<FormData>,
+    ): Result<Map<String, String>> =
         HttpClient {
             install(ContentNegotiation) {
-                json(Json {
-                    ignoreUnknownKeys = true
-                })
+                json(
+                    Json {
+                        ignoreUnknownKeys = true
+                    },
+                )
             }
         }.use { client ->
-            val url = URLBuilder().apply {
-                host = properties.host
-                port = properties.port
-                appendPathSegments(properties.path, properties.version, "$resource.$method")
-                headers {
-                    properties.token?.let {
+            val url =
+                URLBuilder()
+                    .apply {
+                        host = properties.host
+                        port = properties.port
+                        appendPathSegments(properties.path, properties.version, "$resource.$method")
+                        headers {
+                            properties.token?.let {
+                                append(
+                                    HttpHeaders.Authorization,
+                                    "Bearer ${properties.token}",
+                                )
+                            }
+                            append("Satori-Platform", platform)
+                            append("Satori-User-ID", userId)
+                        }
+                    }.buildString()
+            val formData =
+                formData {
+                    for (data in content) {
                         append(
-                            HttpHeaders.Authorization,
-                            "Bearer ${properties.token}"
+                            data.name,
+                            data.content,
+                            Headers.build {
+                                data.filename?.let { filename ->
+                                    append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
+                                }
+                                append(HttpHeaders.ContentType, data.type)
+                            },
                         )
                     }
-                    append("Satori-Platform", platform)
-                    append("Satori-User-ID", userId)
                 }
-            }.buildString()
-            val formData = formData {
-                for (data in content) {
-                    append(data.name, data.content, Headers.build {
-                        data.filename?.let { filename ->
-                            append(HttpHeaders.ContentDisposition, "filename=\"$filename\"")
-                        }
-                        append(HttpHeaders.ContentType, data.type)
-                    })
-                }
-            }
             Logger.d(yutori.name) {
                 """
                 Satori Action Request: url: $url,
@@ -241,6 +364,6 @@ class SatoriActionService(
             }
             val response = client.submitFormWithBinaryData(url, formData)
             Logger.d(yutori.name) { "Satori Action Response: $response" }
-            response.body()
+            Result.success(response.body())
         }
 }

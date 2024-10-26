@@ -30,11 +30,17 @@ object DynamicLookupSerializer : KSerializer<Any> {
     override val descriptor = ContextualSerializer(Any::class, null, emptyArray()).descriptor
 
     @OptIn(InternalSerializationApi::class)
-    override fun serialize(encoder: Encoder, value: Any) {
+    override fun serialize(
+        encoder: Encoder,
+        value: Any,
+    ) {
         val actualSerializer =
             encoder.serializersModule.getContextual(value::class) ?: value::class.serializer()
         @Suppress("UNCHECKED_CAST")
-        encoder.encodeSerializableValue(actualSerializer as KSerializer<Any>, value)
+        encoder.encodeSerializableValue(
+            actualSerializer as KSerializer<Any>,
+            value,
+        )
     }
 
     override fun deserialize(decoder: Decoder): Any {
