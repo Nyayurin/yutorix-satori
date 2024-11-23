@@ -4,11 +4,11 @@
 
 Yutori 的 Satori 扩展模块
 
-| Module                 | Platforms                                                                                                                                  |
-|------------------------|--------------------------------------------------------------------------------------------------------------------------------------------|
-| yutorix-satori-core    | JVM(17), Android(17), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64), Mingw(x64) |
-| yutorix-satori-adapter | JVM(17), Android(17), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64), Mingw(x64) |
-| yutorix-satori-server  | JVM(17), Android(17), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64)                                                       |
+| Module                 | Platforms                                                                                                                                         |
+|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
+| yutorix-satori-core    | JVM(17), Android(17), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64), Mingw(x64) |
+| yutorix-satori-adapter | JVM(17), Android(17), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64), Mingw(x64) |
+| yutorix-satori-server  | JVM(17), Android(17), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64)                                                       |
 
 </div>
 
@@ -68,14 +68,14 @@ yutorix-satori-server = { module = "cn.yurin.yutorix:yutorix-satori-server", ver
 安装模块
 
 ```kotlin
-install(Adapter.satori()) {
-    host = "127.0.0.1"
-    port = 8080
+install(Adapter.satori(
+    host = "127.0.0.1",
+    port = 8080,
     token = "token"
-}
-install(Server.satori()) {
-    listen = "0.0.0.0"
-    port = 8080
+))
+install(Server.satori(
+    listen = "0.0.0.0",
+    port = 8080,
     token = "token"
-}
+))
 ```

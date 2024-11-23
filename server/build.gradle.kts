@@ -29,8 +29,11 @@ kotlin {
     }
 
     // Linux
-    linuxX64 {
-        binaries.staticLib {
+    listOf(
+        linuxX64(),
+        linuxArm64()
+    ).forEach {
+        it.binaries.staticLib {
             baseName = "yutorix-satori-server"
         }
     }

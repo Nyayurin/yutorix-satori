@@ -11,18 +11,25 @@ import cn.yurin.yutori.Yutori
 import cn.yurin.yutorix.module.satori.SatoriServerProperties
 import kotlinx.atomicfu.atomic
 
-fun Server.Companion.satori(alias: String? = null) = SatoriServer(alias)
+fun Server.Companion.satori(
+    alias: String? = null,
+    listen: String = "0.0.0.0",
+    port: Int = 8080,
+    path: String = "",
+    token: String? = null,
+    version: String = "v1",
+) = SatoriServer(alias, listen, port, path, token, version)
 
 @BuilderMarker
 class SatoriServer(
     alias: String?,
+    val listen: String,
+    val port: Int,
+    val path: String,
+    val token: String?,
+    val version: String,
 ) : Server(alias),
     Reinstallable {
-    var listen: String = "0.0.0.0"
-    var port: Int = 8080
-    var path: String = ""
-    var token: String? = null
-    var version: String = "v1"
     private var connecting by atomic(false)
     private var service: SatoriServerService? by atomic(null)
 
