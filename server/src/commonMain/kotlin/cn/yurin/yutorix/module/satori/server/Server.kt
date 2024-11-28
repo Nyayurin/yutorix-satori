@@ -2,12 +2,7 @@
 
 package cn.yurin.yutorix.module.satori.server
 
-import cn.yurin.yutori.BuilderMarker
-import cn.yurin.yutori.Event
-import cn.yurin.yutori.Reinstallable
-import cn.yurin.yutori.Server
-import cn.yurin.yutori.SigningEvent
-import cn.yurin.yutori.Yutori
+import cn.yurin.yutori.*
 import cn.yurin.yutorix.module.satori.SatoriServerProperties
 import kotlinx.atomicfu.atomic
 
@@ -20,7 +15,6 @@ fun Server.Companion.satori(
     version: String = "v1",
 ) = SatoriServer(alias, listen, port, path, token, version)
 
-@BuilderMarker
 class SatoriServer(
     alias: String?,
     val listen: String,
@@ -33,9 +27,9 @@ class SatoriServer(
     private var connecting by atomic(false)
     private var service: SatoriServerService? by atomic(null)
 
-    override fun install(yutori: Yutori) {}
+    override fun install(builder: YutoriBuilder) {}
 
-    override fun uninstall(yutori: Yutori) {}
+    override fun uninstall(builder: YutoriBuilder) {}
 
     override suspend fun start(yutori: Yutori) {
         val properties = SatoriServerProperties(listen, port, path, token, version)

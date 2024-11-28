@@ -2,9 +2,9 @@
 kotlin = "2.0.21"
 agp = "8.6.1"
 atomicfu = "0.25.0"
-ktor = "3.0.0-rc-1"
+ktor = "3.0.1"
 ksoup = "0.1.9"
-yutori = "72549b81b4ef8f59103125cd8ffe9baf2a211b39"
+yutori = "10b1b97900331bc8fea475fa9f68627a5540b9ca"
 
 [libraries]
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }

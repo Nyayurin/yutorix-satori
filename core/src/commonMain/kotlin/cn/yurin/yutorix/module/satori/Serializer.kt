@@ -34,8 +34,7 @@ object DynamicLookupSerializer : KSerializer<Any> {
         encoder: Encoder,
         value: Any,
     ) {
-        val actualSerializer =
-            encoder.serializersModule.getContextual(value::class) ?: value::class.serializer()
+        val actualSerializer = encoder.serializersModule.getContextual(value::class) ?: value::class.serializer()
         @Suppress("UNCHECKED_CAST")
         encoder.encodeSerializableValue(
             actualSerializer as KSerializer<Any>,

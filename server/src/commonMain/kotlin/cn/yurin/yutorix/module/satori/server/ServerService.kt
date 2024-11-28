@@ -1,3 +1,5 @@
+@file:Suppress("MemberVisibilityCanBePrivate")
+
 package cn.yurin.yutorix.module.satori.server
 
 import cn.yurin.yutori.Event
@@ -227,7 +229,7 @@ class SatoriServerService(
                                         Response { call.respond(it) },
                                         yutori,
                                     )
-                                yutori.server.container(context)
+                                yutori.serverConfig.container(context)
                             }
                         }
                     }.start(wait = true)

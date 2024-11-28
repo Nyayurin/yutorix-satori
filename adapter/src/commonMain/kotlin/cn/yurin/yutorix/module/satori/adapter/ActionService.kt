@@ -89,25 +89,23 @@ class SatoriActionService(
                         userId?.let { append("Satori-User-ID", userId) }
                     }
                     setBody(
-                        content.entries
-                            .filter { it.value != null }
-                            .joinToString(",", "{", "}") { (key, value) ->
-                                buildString {
-                                    append("\"$key\":")
-                                    append(
-                                        when (value) {
-                                            is String -> "\"${value.replace("\"", "\\\"")}\""
-                                            is List<*> ->
-                                                "\"${
-                                                    (value as List<MessageElement>).serialize()
-                                                        .replace("\n", "\\n").replace("\"", "\\\"")
-                                                }\""
+                        content.entries.filter { it.value != null }.joinToString(",", "{", "}") { (key, value) ->
+                            buildString {
+                                append("\"$key\":")
+                                append(
+                                    when (value) {
+                                        is String -> "\"${value.replace("\"", "\\\"")}\""
+                                        is List<*> ->
+                                            "\"${
+                                                (value as List<MessageElement>).serialize().replace("\n", "\\n")
+                                                    .replace("\"", "\\\"")
+                                            }\""
 
-                                            else -> value.toString()
-                                        },
-                                    )
-                                }
-                            },
+                                        else -> value.toString()
+                                    },
+                                )
+                            }
+                        },
                     )
                     Logger.d(yutori.name) {
                         """
@@ -179,9 +177,7 @@ class SatoriActionService(
                     when (method) {
                         "get" ->
                             Result.success(
-                                Json
-                                    .decodeFromString<SerializableGuildMember>(body)
-                                    .toUniverse(null, yutori) as T,
+                                Json.decodeFromString<SerializableGuildMember>(body).toUniverse(null, yutori) as T,
                             )
 
                         "list" ->
@@ -217,9 +213,7 @@ class SatoriActionService(
 
                         "create" ->
                             Result.success(
-                                Json
-                                    .decodeFromString<SerializableGuildRole>(body)
-                                    .toUniverse(null, yutori) as T,
+                                Json.decodeFromString<SerializableGuildRole>(body).toUniverse(null, yutori) as T,
                             )
 
                         "update" -> Result.success(Unit as T)
@@ -241,9 +235,7 @@ class SatoriActionService(
                     when (method) {
                         "create" ->
                             Result.success(
-                                Json
-                                    .decodeFromString<List<SerializableMessage>>(body)
-                                    .map { it.toUniverse(null, yutori) } as T,
+                                Json.decodeFromString<List<SerializableMessage>>(body).map { it.toUniverse(null, yutori) } as T,
                             )
 
                         "get" ->

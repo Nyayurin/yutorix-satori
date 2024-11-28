@@ -215,7 +215,7 @@ class WebSocketEventService(
                 }
 
             val context = AdapterContext(actions, event, yutori)
-            yutori.adapter.container(context)
+            yutori.adapterConfig.container(context)
         } catch (e: Exception) {
             Logger.w(name, e) { "处理事件时出错: $event" }
         }
