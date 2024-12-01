@@ -3,64 +3,36 @@
     "unused",
     "HttpUrlsUsage",
     "UastIncorrectHttpHeaderInspection",
-    "UNCHECKED_CAST",
 )
 
 package cn.yurin.yutorix.module.satori.adapter
 
-import cn.yurin.yutori.AdapterActionService
-import cn.yurin.yutori.Channel
-import cn.yurin.yutori.FormData
-import cn.yurin.yutori.Guild
-import cn.yurin.yutori.GuildMember
-import cn.yurin.yutori.GuildRole
-import cn.yurin.yutori.Message
-import cn.yurin.yutori.User
-import cn.yurin.yutori.Yutori
+import cn.yurin.yutori.*
 import cn.yurin.yutori.message.element.MessageElement
-import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
-import cn.yurin.yutorix.module.satori.SerializableBidiPagingList
-import cn.yurin.yutorix.module.satori.SerializableChannel
-import cn.yurin.yutorix.module.satori.SerializableGuild
-import cn.yurin.yutorix.module.satori.SerializableGuildMember
-import cn.yurin.yutorix.module.satori.SerializableGuildRole
-import cn.yurin.yutorix.module.satori.SerializableLogin
-import cn.yurin.yutorix.module.satori.SerializableMessage
-import cn.yurin.yutorix.module.satori.SerializablePagingList
-import cn.yurin.yutorix.module.satori.SerializableUser
-import cn.yurin.yutorix.module.satori.serialize
+import cn.yurin.yutorix.module.satori.*
 import co.touchlab.kermit.Logger
-import io.ktor.client.HttpClient
-import io.ktor.client.call.body
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.request.forms.formData
-import io.ktor.client.request.forms.submitFormWithBinaryData
-import io.ktor.client.request.headers
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
-import io.ktor.http.ContentType
-import io.ktor.http.Headers
-import io.ktor.http.HttpHeaders
-import io.ktor.http.URLBuilder
-import io.ktor.http.appendPathSegments
-import io.ktor.http.contentType
-import io.ktor.http.headers
-import io.ktor.serialization.kotlinx.json.json
-import io.ktor.utils.io.core.use
+import io.ktor.client.*
+import io.ktor.client.call.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.request.*
+import io.ktor.client.request.forms.*
+import io.ktor.client.statement.*
+import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
+import io.ktor.utils.io.core.*
 import kotlinx.serialization.json.Json
 
 class SatoriActionService(
     val yutori: Yutori,
     val properties: SatoriAdapterProperties,
 ) : AdapterActionService() {
-    override suspend fun <T> send(
+    private suspend fun send(
         resource: String,
         method: String,
         platform: String?,
         userId: String?,
-        content: Map<String, Any?>,
-    ): Result<T> =
+        contents: Map<String, Any?>,
+    ): String =
         HttpClient {
             install(ContentNegotiation) {
                 json(
@@ -89,18 +61,12 @@ class SatoriActionService(
                         userId?.let { append("Satori-User-ID", userId) }
                     }
                     setBody(
-                        content.entries.filter { it.value != null }.joinToString(",", "{", "}") { (key, value) ->
+                        contents.entries.filter { it.value != null }.joinToString(",", "{", "}") { (key, value) ->
                             buildString {
                                 append("\"$key\":")
                                 append(
                                     when (value) {
                                         is String -> "\"${value.replace("\"", "\\\"")}\""
-                                        is List<*> ->
-                                            "\"${
-                                                (value as List<MessageElement>).serialize().replace("\n", "\\n")
-                                                    .replace("\"", "\\\"")
-                                            }\""
-
                                         else -> value.toString()
                                     },
                                 )
@@ -116,198 +82,745 @@ class SatoriActionService(
                     }
                 }
             Logger.d(yutori.name) { "Satori Action Response: $response" }
-            val body = response.bodyAsText()
-            when (resource) {
-                "channel" ->
-                    when (method) {
-                        "get" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializablePagingList<SerializableChannel, Channel>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        "create" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        "update" -> Result.success(Unit as T)
-                        "delete" -> Result.success(Unit as T)
-                        "mute" -> Result.success(Unit as T)
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "user.channel" ->
-                    when (method) {
-                        "create" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableChannel>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "guild" ->
-                    when (method) {
-                        "get" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableGuild>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializablePagingList<SerializableGuild, Guild>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        "approve" -> Result.success(Unit as T)
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "guild.member" ->
-                    when (method) {
-                        "get" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableGuildMember>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializablePagingList<SerializableGuildMember, GuildMember>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        "kick" -> Result.success(Unit as T)
-                        "mute" -> Result.success(Unit as T)
-                        "approve" -> Result.success(Unit as T)
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "guild.member.role" ->
-                    when (method) {
-                        "set" -> Result.success(Unit as T)
-                        "unset" -> Result.success(Unit as T)
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "guild.role" ->
-                    when (method) {
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializablePagingList<SerializableGuildRole, GuildRole>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        "create" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableGuildRole>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        "update" -> Result.success(Unit as T)
-                        "delete" -> Result.success(Unit as T)
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "login" ->
-                    when (method) {
-                        "get" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableLogin>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "message" ->
-                    when (method) {
-                        "create" ->
-                            Result.success(
-                                Json.decodeFromString<List<SerializableMessage>>(body).map { it.toUniverse(null, yutori) } as T,
-                            )
-
-                        "get" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableMessage>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        "delete" -> Result.success(Unit as T)
-                        "update" -> Result.success(Unit as T)
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializableBidiPagingList<SerializableMessage, Message>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "reaction" ->
-                    when (method) {
-                        "create" -> Result.success(Unit as T)
-                        "delete" -> Result.success(Unit as T)
-                        "clear" -> Result.success(Unit as T)
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializablePagingList<SerializableUser, User>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "user" ->
-                    when (method) {
-                        "get" ->
-                            Result.success(
-                                Json.decodeFromString<SerializableUser>(body).toUniverse(null, yutori) as T,
-                            )
-
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                "friend" ->
-                    when (method) {
-                        "list" ->
-                            Result.success(
-                                Json
-                                    .decodeFromString<SerializablePagingList<SerializableUser, User>>(
-                                        body,
-                                    ).toUniverse(null, yutori) as T,
-                            )
-
-                        "approve" -> Result.success(Unit as T)
-                        else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
-                    }
-
-                else -> Result.failure(UnsupportedOperationException("Unsupported action: $resource.$method"))
+            if (response.status.isSuccess()) {
+                response.bodyAsText()
+            } else {
+                throw RuntimeException("Satori Action Error: ${response.status}, ${response.bodyAsText()}")
             }
         }
 
-    override suspend fun upload(
+    private suspend inline fun <reified T : Convertable<U>, U> send(
         resource: String,
         method: String,
-        platform: String,
+        platform: String?,
+        userId: String?,
+        content: Map<String, Any?>
+    ): U = Json.decodeFromString<T>(send(resource, method, platform, userId, content)).toUniverse(null, yutori)
+
+    private suspend inline fun <reified T : Convertable<U>, U> sendList(
+        resource: String,
+        method: String,
+        platform: String?,
+        userId: String?,
+        content: Map<String, Any?>
+    ): List<U> = Json.decodeFromString<List<T>>(send(resource, method, platform, userId, content)).map {
+        it.toUniverse(null, yutori)
+    }
+
+    override suspend fun channelGet(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableChannel, Channel>(
+        resource = "channel",
+        method = "create",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "channel_id" to channelId,
+            *contents
+        )
+    )
+
+    override suspend fun channelList(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        next: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializablePagingList<SerializableChannel, Channel>, PagingList<Channel>>(
+        resource = "channel",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            "next" to next,
+            *contents
+        )
+    )
+
+    override suspend fun channelCreate(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        data: Channel,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableChannel, Channel>(
+        resource = "channel",
+        method = "create",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            "data" to data.toSerializable(),
+            *contents
+        )
+    )
+
+    override suspend fun channelUpdate(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        data: Channel,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "channel",
+            method = "update",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "data" to data.toSerializable(),
+                *contents
+            )
+        )
+    }
+
+    override suspend fun channelDelete(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "channel",
+            method = "delete",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun channelMute(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        duration: Number,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "channel",
+            method = "mute",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "duration" to duration,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun userChannelCreate(
+        headerPlatform: String,
+        headerUserId: String,
         userId: String,
-        content: List<FormData>,
-    ): Result<Map<String, String>> =
-        HttpClient {
+        guildId: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableChannel, Channel>(
+        resource = "user.channel",
+        method = "create",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "user_id" to userId,
+            "guild_id" to guildId,
+            *contents
+        )
+    )
+
+    override suspend fun guildGet(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableGuild, Guild>(
+        resource = "guild",
+        method = "get",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            *contents
+        )
+    )
+
+    override suspend fun guildList(
+        headerPlatform: String,
+        headerUserId: String,
+        next: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializablePagingList<SerializableGuild, Guild>, PagingList<Guild>>(
+        resource = "guild",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "next" to next,
+            *contents
+        )
+    )
+
+    override suspend fun guildApprove(
+        headerPlatform: String,
+        headerUserId: String,
+        messageId: String,
+        approve: Boolean,
+        comment: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild",
+            method = "approve",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "message_id" to messageId,
+                "approve" to approve,
+                "comment" to comment,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildMemberGet(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        userId: String,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableGuildMember, GuildMember>(
+        resource = "guild.member",
+        method = "get",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            "user_id" to userId,
+            *contents
+        )
+    )
+
+    override suspend fun guildMemberList(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        next: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializablePagingList<SerializableGuildMember, GuildMember>, PagingList<GuildMember>>(
+        resource = "guild.member",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            "next" to next,
+            *contents
+        )
+    )
+
+    override suspend fun guildMemberKick(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        userId: String,
+        permanent: Boolean?,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.member",
+            method = "kick",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "guild_id" to guildId,
+                "user_id" to userId,
+                "permanent" to permanent,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildMemberMute(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        userId: String,
+        duration: Number,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.member",
+            method = "mute",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "guild_id" to guildId,
+                "user_id" to userId,
+                "duration" to duration,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildMemberApprove(
+        headerPlatform: String,
+        headerUserId: String,
+        messageId: String,
+        approve: Boolean,
+        comment: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.member",
+            method = "approve",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "message_id" to messageId,
+                "approve" to approve,
+                "comment" to comment,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildMemberRoleSet(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        userId: String,
+        roleId: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.member.role",
+            method = "set",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "guild_id" to guildId,
+                "user_id" to userId,
+                "role_id" to roleId,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildMemberRoleUnset(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        userId: String,
+        roleId: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.member.role",
+            method = "unset",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "guild_id" to guildId,
+                "user_id" to userId,
+                "role_id" to roleId,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildRoleList(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        next: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializablePagingList<SerializableGuildRole, GuildRole>, PagingList<GuildRole>>(
+        resource = "guild.role",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            "next" to next,
+            *contents
+        )
+    )
+
+    override suspend fun guildRoleCreate(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        role: GuildRole,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableGuildRole, GuildRole>(
+        resource = "guild.role",
+        method = "create",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "guild_id" to guildId,
+            "role" to role.toSerializable(),
+            *contents
+        )
+    )
+
+    override suspend fun guildRoleUpdate(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        roleId: String,
+        role: GuildRole,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.role",
+            method = "update",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "guild_id" to guildId,
+                "role_id" to roleId,
+                "role" to role.toSerializable(),
+                *contents
+            )
+        )
+    }
+
+    override suspend fun guildRoleDelete(
+        headerPlatform: String,
+        headerUserId: String,
+        guildId: String,
+        roleId: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "guild.role",
+            method = "delete",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "guild_id" to guildId,
+                "role_id" to roleId,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun loginGet(
+        headerPlatform: String,
+        headerUserId: String,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableLogin, Login>(
+        resource = "login",
+        method = "get",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(*contents)
+    )
+
+    override suspend fun messageCreate(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        content: List<MessageElement>,
+        contents: Array<out Pair<String, Any>>
+    ) = sendList<SerializableMessage, Message>(
+        resource = "message",
+        method = "create",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "channel_id" to channelId,
+            "content" to content.serialize(),
+            *contents
+        )
+    )
+
+    override suspend fun messageGet(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableMessage, Message>(
+        resource = "message",
+        method = "get",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "channel_id" to channelId,
+            "message_id" to messageId,
+            *contents
+        )
+    )
+
+    override suspend fun messageDelete(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "message",
+            method = "delete",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "message_id" to messageId,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun messageUpdate(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        content: List<MessageElement>,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "message",
+            method = "update",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "message_id" to messageId,
+                "content" to content.serialize(),
+                *contents
+            )
+        )
+    }
+
+    override suspend fun messageList(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        next: String?,
+        direction: BidiPagingList.Direction?,
+        limit: Number?,
+        order: BidiPagingList.Order?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableBidiPagingList<SerializableMessage, Message>, BidiPagingList<Message>>(
+        resource = "message",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "channel_id" to channelId,
+            "next" to next,
+            "direction" to direction?.value,
+            "limit" to limit,
+            "order" to order?.value,
+            *contents
+        )
+    )
+
+    override suspend fun reactionCreate(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        emoji: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "reaction",
+            method = "create",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "message_id" to messageId,
+                "emoji" to emoji,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun reactionDelete(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        emoji: String,
+        userId: String?,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "reaction",
+            method = "delete",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "message_id" to messageId,
+                "emoji" to emoji,
+                "user_id" to userId,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun reactionClear(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        emoji: String?,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "reaction",
+            method = "clear",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "channel_id" to channelId,
+                "message_id" to messageId,
+                "emoji" to emoji,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun reactionList(
+        headerPlatform: String,
+        headerUserId: String,
+        channelId: String,
+        messageId: String,
+        emoji: String,
+        next: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializablePagingList<SerializableUser, User>, PagingList<User>>(
+        resource = "reaction",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "channel_id" to channelId,
+            "message_id" to messageId,
+            "emoji" to emoji,
+            "next" to next,
+            *contents
+        )
+    )
+
+    override suspend fun userGet(
+        headerPlatform: String,
+        headerUserId: String,
+        userId: String,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializableUser, User>(
+        resource = "user",
+        method = "get",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "user_id" to userId,
+            *contents
+        )
+    )
+
+    override suspend fun friendList(
+        headerPlatform: String,
+        headerUserId: String,
+        next: String?,
+        contents: Array<out Pair<String, Any>>
+    ) = send<SerializablePagingList<SerializableUser, User>, PagingList<User>>(
+        resource = "friend",
+        method = "list",
+        platform = headerPlatform,
+        userId = headerUserId,
+        content = mapOf(
+            "next" to next,
+            *contents
+        )
+    )
+
+    override suspend fun friendApprove(
+        headerPlatform: String,
+        headerUserId: String,
+        messageId: String,
+        approve: Boolean,
+        comment: String?,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "friend",
+            method = "approve",
+            platform = headerPlatform,
+            userId = headerUserId,
+            contents = mapOf(
+                "message_id" to messageId,
+                "approve" to approve,
+                "comment" to comment,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun adminLoginList(
+        contents: Array<out Pair<String, Any>>
+    ) = sendList<SerializableLogin, Login>(
+        resource = "admin.login",
+        method = "list",
+        platform = null,
+        userId = null,
+        content = mapOf(*contents)
+    )
+
+    override suspend fun adminWebhookCreate(
+        url: String,
+        token: String?,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "admin.webhook",
+            method = "create",
+            platform = null,
+            userId = null,
+            contents = mapOf(
+                "url" to url,
+                "token" to token,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun adminWebhookDelete(
+        url: String,
+        contents: Array<out Pair<String, Any>>
+    ) {
+        send(
+            resource = "admin.webhook",
+            method = "delete",
+            platform = null,
+            userId = null,
+            contents = mapOf(
+                "url" to url,
+                *contents
+            )
+        )
+    }
+
+    override suspend fun uploadCreate(
+        headerPlatform: String,
+        headerUserId: String,
+        contents: Array<out FormData>
+    ): Map<String, String> {
+        return HttpClient {
             install(ContentNegotiation) {
                 json(
                     Json {
@@ -321,7 +834,7 @@ class SatoriActionService(
                     .apply {
                         host = properties.host
                         port = properties.port
-                        appendPathSegments(properties.path, properties.version, "$resource.$method")
+                        appendPathSegments(properties.path, properties.version, "upload.create")
                         headers {
                             properties.token?.let {
                                 append(
@@ -329,13 +842,13 @@ class SatoriActionService(
                                     "Bearer ${properties.token}",
                                 )
                             }
-                            append("Satori-Platform", platform)
-                            append("Satori-User-ID", userId)
+                            append("Satori-Platform", headerPlatform)
+                            append("Satori-User-ID", headerUserId)
                         }
                     }.buildString()
             val formData =
                 formData {
-                    for (data in content) {
+                    for (data in contents) {
                         append(
                             data.name,
                             data.content,
@@ -356,6 +869,11 @@ class SatoriActionService(
             }
             val response = client.submitFormWithBinaryData(url, formData)
             Logger.d(yutori.name) { "Satori Action Response: $response" }
-            Result.success(response.body())
+            if (response.status.isSuccess()) {
+                response.body()
+            } else {
+                throw RuntimeException("Satori Action Error: ${response.status}, ${response.bodyAsText()}")
+            }
         }
+    }
 }

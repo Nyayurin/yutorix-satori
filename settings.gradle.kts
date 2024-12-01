@@ -22,9 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-include(":core")
-include(":adapter")
-include(":server")
+include(":core", ":adapter", ":server")
 findProject(":core")!!.name = "yutorix-satori-core"
 findProject(":adapter")!!.name = "yutorix-satori-adapter"
 findProject(":server")!!.name = "yutorix-satori-server"

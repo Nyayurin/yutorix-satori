@@ -2,28 +2,8 @@
 
 package cn.yurin.yutorix.module.satori.server
 
-import cn.yurin.yutori.Event
-import cn.yurin.yutori.Login
-import cn.yurin.yutori.Request
-import cn.yurin.yutori.Response
-import cn.yurin.yutori.ServerContext
-import cn.yurin.yutori.ServerService
-import cn.yurin.yutori.SigningEvent
-import cn.yurin.yutori.Yutori
-import cn.yurin.yutorix.module.satori.EventSignal
-import cn.yurin.yutorix.module.satori.IdentifySignal
-import cn.yurin.yutorix.module.satori.PingSignal
-import cn.yurin.yutorix.module.satori.PongSignal
-import cn.yurin.yutorix.module.satori.Ready
-import cn.yurin.yutorix.module.satori.ReadySignal
-import cn.yurin.yutorix.module.satori.SatoriServerProperties
-import cn.yurin.yutorix.module.satori.SerializableBidiPagingList
-import cn.yurin.yutorix.module.satori.SerializableChannel
-import cn.yurin.yutorix.module.satori.SerializableEvent
-import cn.yurin.yutorix.module.satori.SerializableGuildRole
-import cn.yurin.yutorix.module.satori.SerializableLogin
-import cn.yurin.yutorix.module.satori.Signal
-import cn.yurin.yutorix.module.satori.deserialize
+import cn.yurin.yutori.*
+import cn.yurin.yutorix.module.satori.*
 import co.touchlab.kermit.Logger
 import io.ktor.http.HttpStatusCode
 import io.ktor.serialization.kotlinx.KotlinxWebsocketSerializationConverter
@@ -116,15 +96,7 @@ class SatoriServerService(
                                                 }
                                                 connectedClients += this
                                                 Logger.i(name) { "建立事件推送服务($address): $logins" }
-                                                sendSerialized(
-                                                    ReadySignal(
-                                                        Ready(
-                                                            logins.map {
-                                                                SerializableLogin.fromUniverse(it)
-                                                            },
-                                                        ),
-                                                    ),
-                                                )
+                                                sendSerialized(ReadySignal(Ready(logins.map { it.toSerializable() })))
                                                 launch {
                                                     do {
                                                         isReceivedPing = false
@@ -185,12 +157,12 @@ class SatoriServerService(
                                                     "guildId" to element.remove("guild_id")?.jsonPrimitive?.content,
                                                     "next" to element.remove("next")?.jsonPrimitive?.content,
                                                     "data" to
-                                                        element.remove("data")?.let {
-                                                            json
-                                                                .decodeFromJsonElement<SerializableChannel>(
-                                                                    it,
-                                                                ).toUniverse(null, yutori)
-                                                        },
+                                                            element.remove("data")?.let {
+                                                                json
+                                                                    .decodeFromJsonElement<SerializableChannel>(
+                                                                        it,
+                                                                    ).toUniverse(null, yutori)
+                                                            },
                                                     "duration" to element.remove("duration")?.jsonPrimitive?.int,
                                                     "userId" to element.remove("user_id")?.jsonPrimitive?.content,
                                                     "messageId" to element.remove("message_id")?.jsonPrimitive?.content,
@@ -199,28 +171,24 @@ class SatoriServerService(
                                                     "permanent" to element.remove("permanent")?.jsonPrimitive?.boolean,
                                                     "roleId" to element.remove("role_id")?.jsonPrimitive?.content,
                                                     "role" to
-                                                        element.remove("role")?.let {
-                                                            json.decodeFromJsonElement<SerializableGuildRole>(
-                                                                it,
-                                                            )
-                                                        },
+                                                            element.remove("role")?.let {
+                                                                json.decodeFromJsonElement<SerializableGuildRole>(
+                                                                    it,
+                                                                )
+                                                            },
                                                     "content" to
-                                                        element.remove("content")?.jsonPrimitive?.content?.deserialize(
-                                                            yutori,
-                                                        ),
+                                                            element.remove("content")?.jsonPrimitive?.content?.deserialize(
+                                                                yutori,
+                                                            ),
                                                     "direction" to
-                                                        element.remove("direction")?.let {
-                                                            json.decodeFromJsonElement<SerializableBidiPagingList.Direction>(
-                                                                it,
-                                                            )
-                                                        },
+                                                            element.remove("direction")?.jsonPrimitive?.content?.let { direction ->
+                                                                BidiPagingList.Direction.entries.find { it.value == direction }
+                                                            },
                                                     "limit" to element.remove("limit")?.jsonPrimitive?.int,
                                                     "order" to
-                                                        element.remove("order")?.let {
-                                                            json.decodeFromJsonElement<SerializableBidiPagingList.Order>(
-                                                                it,
-                                                            )
-                                                        },
+                                                            element.remove("order")?.jsonPrimitive?.content.let { order ->
+                                                                BidiPagingList.Order.entries.find { it.value == order }
+                                                            },
                                                     "emoji" to element.remove("emoji")?.jsonPrimitive?.content,
                                                 ).apply {
                                                     putAll(element)
@@ -242,7 +210,7 @@ class SatoriServerService(
             for (session in connectedClients) {
                 launch {
                     val json =
-                        json.encodeToString(EventSignal(SerializableEvent.fromUniverse(event)))
+                        json.encodeToString(EventSignal(event.toSerializable()))
                     Logger.d(yutori.name) { "推送事件: $json" }
                     session.send(json)
                 }

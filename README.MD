@@ -4,11 +4,11 @@
 
 Yutori 的 Satori 扩展模块
 
-| Module                 | Platforms                                                                                                                                         |
-|------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
-| yutorix-satori-core    | JVM(17), Android(17), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64), Mingw(x64) |
-| yutorix-satori-adapter | JVM(17), Android(17), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64), Mingw(x64) |
-| yutorix-satori-server  | JVM(17), Android(17), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64)                                                       |
+| Module                 | Platforms                                                                                                                                       |
+|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------|
+| yutorix-satori-core    | JVM(8), Android(8), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64), Mingw(x64) |
+| yutorix-satori-adapter | JVM(8), Android(8), JS(Browser, Node), WasmJS(Browser, Node), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64), Mingw(x64) |
+| yutorix-satori-server  | JVM(8), Android(8), IOS(x64, Arm64, SimulatorArm64), MacOS(x64, Arm64), Linux(x64, Arm64)                                                       |
 
 </div>
 

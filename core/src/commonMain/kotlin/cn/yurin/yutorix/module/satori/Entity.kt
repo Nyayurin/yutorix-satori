@@ -2,29 +2,7 @@
 
 package cn.yurin.yutorix.module.satori
 
-import cn.yurin.yutori.BidiPagingList
-import cn.yurin.yutori.Channel
-import cn.yurin.yutori.Event
-import cn.yurin.yutori.Guild
-import cn.yurin.yutori.GuildMember
-import cn.yurin.yutori.GuildRole
-import cn.yurin.yutori.Interaction
-import cn.yurin.yutori.Login
-import cn.yurin.yutori.Message
-import cn.yurin.yutori.PagingList
-import cn.yurin.yutori.SigningEvent
-import cn.yurin.yutori.User
-import cn.yurin.yutori.Yutori
-import cn.yurin.yutori.argv
-import cn.yurin.yutori.button
-import cn.yurin.yutori.channel
-import cn.yurin.yutori.guild
-import cn.yurin.yutori.login
-import cn.yurin.yutori.member
-import cn.yurin.yutori.message
-import cn.yurin.yutori.operator
-import cn.yurin.yutori.role
-import cn.yurin.yutori.user
+import cn.yurin.yutori.*
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -166,27 +144,6 @@ class SerializableEvent(
         role = role?.toUniverse(alias, yutori),
         user = user?.toUniverse(alias, yutori),
     )
-
-    companion object {
-        fun fromUniverse(universe: Event<SigningEvent>) =
-            SerializableEvent(
-                id = universe.id.toInt(),
-                type = universe.type,
-                platform = universe.platform,
-                selfId = universe.selfId,
-                timestamp = universe.timestamp.toLong(),
-                argv = universe.argv?.let { SerializableInteraction.Argv.fromUniverse(it) },
-                button = universe.button?.let { SerializableInteraction.Button.fromUniverse(it) },
-                channel = universe.channel?.let { SerializableChannel.fromUniverse(it) },
-                guild = universe.guild?.let { SerializableGuild.fromUniverse(it) },
-                login = universe.login?.let { SerializableLogin.fromUniverse(it) },
-                member = universe.member?.let { SerializableGuildMember.fromUniverse(it) },
-                message = universe.message?.let { SerializableMessage.fromUniverse(it) },
-                operator = universe.operator?.let { SerializableUser.fromUniverse(it) },
-                role = universe.role?.let { SerializableGuildRole.fromUniverse(it) },
-                user = universe.user?.let { SerializableUser.fromUniverse(it) },
-            )
-    }
 }
 
 sealed class SerializableInteraction {
@@ -210,15 +167,6 @@ sealed class SerializableInteraction {
                 arguments = arguments,
                 options = options,
             )
-
-            companion object {
-                fun fromUniverse(universe: Interaction.Argv) =
-                    Argv(
-                        name = universe.name,
-                        arguments = universe.arguments,
-                        options = universe.options,
-                    )
-            }
         }
 
     @Serializable
@@ -230,10 +178,6 @@ sealed class SerializableInteraction {
             alias: String?,
             yutori: Yutori,
         ) = Interaction.Button(id = id)
-
-        companion object {
-            fun fromUniverse(universe: Interaction.Button) = Button(id = universe.id)
-        }
     }
 }
 
@@ -253,16 +197,6 @@ data class SerializableChannel(
         name = name,
         parentId = parentId,
     )
-
-    companion object {
-        fun fromUniverse(universe: Channel) =
-            SerializableChannel(
-                id = universe.id,
-                type = universe.type.toInt(),
-                name = universe.name,
-                parentId = universe.parentId,
-            )
-    }
 }
 
 @Serializable
@@ -279,15 +213,6 @@ data class SerializableGuild(
         name = name,
         avatar = avatar,
     )
-
-    companion object {
-        fun fromUniverse(universe: Guild) =
-            SerializableGuild(
-                id = universe.id,
-                name = universe.name,
-                avatar = universe.avatar,
-            )
-    }
 }
 
 @Serializable
@@ -310,18 +235,6 @@ data class SerializableLogin(
         features = features,
         proxyUrls = proxyUrls,
     )
-
-    companion object {
-        fun fromUniverse(universe: Login) =
-            SerializableLogin(
-                adapter = universe.adapter,
-                platform = universe.platform,
-                user = universe.user?.let { SerializableUser.fromUniverse(it) },
-                status = universe.status?.toInt(),
-                features = universe.features,
-                proxyUrls = universe.proxyUrls,
-            )
-    }
 }
 
 @Serializable
@@ -340,16 +253,6 @@ data class SerializableGuildMember(
         avatar = avatar,
         joinedAt = joinedAt,
     )
-
-    companion object {
-        fun fromUniverse(universe: GuildMember) =
-            SerializableGuildMember(
-                user = universe.user?.let { SerializableUser.fromUniverse(it) },
-                nick = universe.nick,
-                avatar = universe.avatar,
-                joinedAt = universe.joinedAt?.toLong(),
-            )
-    }
 }
 
 @Serializable
@@ -376,20 +279,6 @@ data class SerializableMessage(
         createdAt = createdAt,
         updatedAt = updatedAt,
     )
-
-    companion object {
-        fun fromUniverse(universe: Message) =
-            SerializableMessage(
-                id = universe.id,
-                content = universe.content.serialize(),
-                channel = universe.channel?.let { SerializableChannel.fromUniverse(it) },
-                guild = universe.guild?.let { SerializableGuild.fromUniverse(it) },
-                member = universe.member?.let { SerializableGuildMember.fromUniverse(it) },
-                user = universe.user?.let { SerializableUser.fromUniverse(it) },
-                createdAt = universe.createdAt?.toLong(),
-                updatedAt = universe.updatedAt?.toLong(),
-            )
-    }
 }
 
 @Serializable
@@ -410,17 +299,6 @@ data class SerializableUser(
         avatar = avatar,
         isBot = isBot,
     )
-
-    companion object {
-        fun fromUniverse(universe: User) =
-            SerializableUser(
-                id = universe.id,
-                name = universe.name,
-                nick = universe.nick,
-                avatar = universe.avatar,
-                isBot = universe.isBot,
-            )
-    }
 }
 
 @Serializable
@@ -435,14 +313,6 @@ data class SerializableGuildRole(
         id = id,
         name = name,
     )
-
-    companion object {
-        fun fromUniverse(universe: GuildRole) =
-            SerializableGuildRole(
-                id = universe.id,
-                name = universe.name,
-            )
-    }
 }
 
 @Serializable
@@ -464,14 +334,6 @@ data class SerializablePagingList<T, U>(
             },
         next = next,
     )
-
-    companion object {
-        fun <T> fromUniverse(universe: PagingList<T>) =
-            SerializablePagingList<T, T>(
-                data = universe.data,
-                next = universe.next,
-            )
-    }
 }
 
 @Serializable
@@ -480,29 +342,6 @@ data class SerializableBidiPagingList<T, U>(
     val prev: String? = null,
     val next: String? = null,
 ) : Convertable<BidiPagingList<U>> {
-    @Serializable
-    enum class Direction(
-        val value: String,
-    ) {
-        Before("before"),
-        After("after"),
-        Around("around"),
-        ;
-
-        override fun toString() = value
-    }
-
-    @Serializable
-    enum class Order(
-        val value: String,
-    ) {
-        Asc("asc"),
-        Desc("desc"),
-        ;
-
-        override fun toString() = value
-    }
-
     override fun toUniverse(
         alias: String?,
         yutori: Yutori,
@@ -518,13 +357,4 @@ data class SerializableBidiPagingList<T, U>(
         prev = prev,
         next = next,
     )
-
-    companion object {
-        fun <T> fromUniverse(universe: BidiPagingList<T>) =
-            SerializableBidiPagingList<T, T>(
-                data = universe.data,
-                prev = universe.prev,
-                next = universe.next,
-            )
-    }
 }

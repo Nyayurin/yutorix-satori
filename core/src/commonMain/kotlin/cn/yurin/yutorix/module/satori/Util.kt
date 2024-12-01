@@ -2,9 +2,11 @@
 
 package cn.yurin.yutorix.module.satori
 
-import cn.yurin.yutori.Yutori
+import cn.yurin.yutori.*
 import cn.yurin.yutori.message.element.MessageElement
 import cn.yurin.yutori.message.element.Text
+import cn.yurin.yutorix.module.satori.SerializableInteraction.Argv
+import cn.yurin.yutorix.module.satori.SerializableInteraction.Button
 import com.fleeksoft.ksoup.Ksoup
 import com.fleeksoft.ksoup.nodes.Comment
 import com.fleeksoft.ksoup.nodes.DocumentType
@@ -108,3 +110,93 @@ private fun MessageElement.serialize() =
             append("</$nodeName>")
         }
     }
+
+fun Event<SigningEvent>.toSerializable() = SerializableEvent(
+    id = id.toInt(),
+    type = type,
+    platform = platform,
+    selfId = selfId,
+    timestamp = timestamp.toLong(),
+    argv = argv?.toSerializable(),
+    button = button?.toSerializable(),
+    channel = channel?.toSerializable(),
+    guild = guild?.toSerializable(),
+    login = login?.toSerializable(),
+    member = member?.toSerializable(),
+    message = message?.toSerializable(),
+    operator = operator?.toSerializable(),
+    role = role?.toSerializable(),
+    user = user?.toSerializable(),
+)
+
+fun Interaction.Argv.toSerializable() = Argv(
+    name = name,
+    arguments = arguments,
+    options = options,
+)
+
+fun Interaction.Button.toSerializable() = Button(id = id)
+
+fun Channel.toSerializable() = SerializableChannel(
+    id = id,
+    type = type.toInt(),
+    name = name,
+    parentId = parentId,
+)
+
+fun Guild.toSerializable() = SerializableGuild(
+    id = id,
+    name = name,
+    avatar = avatar,
+)
+
+fun Login.toSerializable() = SerializableLogin(
+    adapter = adapter,
+    platform = platform,
+    user = user?.toSerializable(),
+    status = status?.toInt(),
+    features = features,
+    proxyUrls = proxyUrls,
+)
+
+fun GuildMember.toSerializable() = SerializableGuildMember(
+    user = user?.toSerializable(),
+    nick = nick,
+    avatar = avatar,
+    joinedAt = joinedAt?.toLong(),
+)
+
+fun Message.toSerializable() = SerializableMessage(
+    id = id,
+    content = content.serialize(),
+    channel = channel?.toSerializable(),
+    guild = guild?.toSerializable(),
+    member = member?.toSerializable(),
+    user = user?.toSerializable(),
+    createdAt = createdAt?.toLong(),
+    updatedAt = updatedAt?.toLong(),
+)
+
+fun User.toSerializable() = SerializableUser(
+    id = id,
+    name = name,
+    nick = nick,
+    avatar = avatar,
+    isBot = isBot,
+)
+
+fun GuildRole.toSerializable() = SerializableGuildRole(
+    id = id,
+    name = name,
+)
+
+fun <T> PagingList<T>.toSerializable() = SerializablePagingList<T, T>(
+    data = data,
+    next = next,
+)
+
+fun <T> BidiPagingList<T>.toSerializable() = SerializableBidiPagingList<T, T>(
+    data = data,
+    prev = prev,
+    next = next,
+)
