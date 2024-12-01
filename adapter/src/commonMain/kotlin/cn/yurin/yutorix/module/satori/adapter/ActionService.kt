@@ -89,7 +89,7 @@ class SatoriActionService(
             }
         }
 
-    private suspend inline fun <reified T : Convertable<U>, U> send(
+    private suspend inline fun <reified T : Convertable<U>, U> sendSerialize(
         resource: String,
         method: String,
         platform: String?,
@@ -112,7 +112,7 @@ class SatoriActionService(
         headerUserId: String,
         channelId: String,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableChannel, Channel>(
+    ) = sendSerialize<SerializableChannel, Channel>(
         resource = "channel",
         method = "create",
         platform = headerPlatform,
@@ -129,7 +129,7 @@ class SatoriActionService(
         guildId: String,
         next: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializablePagingList<SerializableChannel, Channel>, PagingList<Channel>>(
+    ) = sendSerialize<SerializablePagingList<SerializableChannel, Channel>, PagingList<Channel>>(
         resource = "channel",
         method = "list",
         platform = headerPlatform,
@@ -147,7 +147,7 @@ class SatoriActionService(
         guildId: String,
         data: Channel,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableChannel, Channel>(
+    ) = sendSerialize<SerializableChannel, Channel>(
         resource = "channel",
         method = "create",
         platform = headerPlatform,
@@ -223,7 +223,7 @@ class SatoriActionService(
         userId: String,
         guildId: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableChannel, Channel>(
+    ) = sendSerialize<SerializableChannel, Channel>(
         resource = "user.channel",
         method = "create",
         platform = headerPlatform,
@@ -240,7 +240,7 @@ class SatoriActionService(
         headerUserId: String,
         guildId: String,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableGuild, Guild>(
+    ) = sendSerialize<SerializableGuild, Guild>(
         resource = "guild",
         method = "get",
         platform = headerPlatform,
@@ -256,7 +256,7 @@ class SatoriActionService(
         headerUserId: String,
         next: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializablePagingList<SerializableGuild, Guild>, PagingList<Guild>>(
+    ) = sendSerialize<SerializablePagingList<SerializableGuild, Guild>, PagingList<Guild>>(
         resource = "guild",
         method = "list",
         platform = headerPlatform,
@@ -295,7 +295,7 @@ class SatoriActionService(
         guildId: String,
         userId: String,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableGuildMember, GuildMember>(
+    ) = sendSerialize<SerializableGuildMember, GuildMember>(
         resource = "guild.member",
         method = "get",
         platform = headerPlatform,
@@ -313,7 +313,7 @@ class SatoriActionService(
         guildId: String,
         next: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializablePagingList<SerializableGuildMember, GuildMember>, PagingList<GuildMember>>(
+    ) = sendSerialize<SerializablePagingList<SerializableGuildMember, GuildMember>, PagingList<GuildMember>>(
         resource = "guild.member",
         method = "list",
         platform = headerPlatform,
@@ -441,7 +441,7 @@ class SatoriActionService(
         guildId: String,
         next: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializablePagingList<SerializableGuildRole, GuildRole>, PagingList<GuildRole>>(
+    ) = sendSerialize<SerializablePagingList<SerializableGuildRole, GuildRole>, PagingList<GuildRole>>(
         resource = "guild.role",
         method = "list",
         platform = headerPlatform,
@@ -459,7 +459,7 @@ class SatoriActionService(
         guildId: String,
         role: GuildRole,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableGuildRole, GuildRole>(
+    ) = sendSerialize<SerializableGuildRole, GuildRole>(
         resource = "guild.role",
         method = "create",
         platform = headerPlatform,
@@ -517,7 +517,7 @@ class SatoriActionService(
         headerPlatform: String,
         headerUserId: String,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableLogin, Login>(
+    ) = sendSerialize<SerializableLogin, Login>(
         resource = "login",
         method = "get",
         platform = headerPlatform,
@@ -549,7 +549,7 @@ class SatoriActionService(
         channelId: String,
         messageId: String,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableMessage, Message>(
+    ) = sendSerialize<SerializableMessage, Message>(
         resource = "message",
         method = "get",
         platform = headerPlatform,
@@ -612,7 +612,7 @@ class SatoriActionService(
         limit: Number?,
         order: BidiPagingList.Order?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableBidiPagingList<SerializableMessage, Message>, BidiPagingList<Message>>(
+    ) = sendSerialize<SerializableBidiPagingList<SerializableMessage, Message>, BidiPagingList<Message>>(
         resource = "message",
         method = "list",
         platform = headerPlatform,
@@ -703,7 +703,7 @@ class SatoriActionService(
         emoji: String,
         next: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializablePagingList<SerializableUser, User>, PagingList<User>>(
+    ) = sendSerialize<SerializablePagingList<SerializableUser, User>, PagingList<User>>(
         resource = "reaction",
         method = "list",
         platform = headerPlatform,
@@ -722,7 +722,7 @@ class SatoriActionService(
         headerUserId: String,
         userId: String,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializableUser, User>(
+    ) = sendSerialize<SerializableUser, User>(
         resource = "user",
         method = "get",
         platform = headerPlatform,
@@ -738,7 +738,7 @@ class SatoriActionService(
         headerUserId: String,
         next: String?,
         contents: Array<out Pair<String, Any>>
-    ) = send<SerializablePagingList<SerializableUser, User>, PagingList<User>>(
+    ) = sendSerialize<SerializablePagingList<SerializableUser, User>, PagingList<User>>(
         resource = "friend",
         method = "list",
         platform = headerPlatform,
