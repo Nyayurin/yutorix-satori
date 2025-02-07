@@ -1,10 +1,10 @@
 [versions]
-kotlin = "2.0.21"
-agp = "8.6.1"
-atomicfu = "0.25.0"
-ktor = "3.0.1"
-ksoup = "0.1.9"
-yutori = "83465ece99a41e761631baeebf86af7d70bd51da"
+kotlin = "2.1.10"
+agp = "8.8.0-alpha05"
+atomicfu = "0.27.0"
+ktor = "3.0.3"
+ksoup = "0.2.2"
+yutori = "eb823a9c7f2de84a6837af65096545d3e1a5e908"
 
 [libraries]
 ktor-serialization-kotlinx-json = { module = "io.ktor:ktor-serialization-kotlinx-json", version.ref = "ktor" }
@@ -19,7 +19,7 @@ ktor-client-darwin = { module = "io.ktor:ktor-client-darwin", version.ref = "kto
 ktor-client-curl = { module = "io.ktor:ktor-client-curl", version.ref = "ktor" }
 ktor-client-winhttp = { module = "io.ktor:ktor-client-winhttp", version.ref = "ktor" }
 ktor-client-js = { module = "io.ktor:ktor-client-js", version.ref = "ktor" }
-ksoup = { module = "com.fleeksoft.ksoup:ksoup-lite", version.ref = "ksoup" }
+ksoup = { module = "com.fleeksoft.ksoup:ksoup", version.ref = "ksoup" }
 yutori = { module = "cn.yurin.yutori:yutori", version.ref = "yutori" }
 
 [plugins]
