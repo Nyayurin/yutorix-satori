@@ -14,35 +14,34 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.serializer
 
 object SignalSerializer : JsonContentPolymorphicSerializer<Signal>(Signal::class) {
-    override fun selectDeserializer(element: JsonElement) =
-        when (val op = element.jsonObject["op"]!!.jsonPrimitive.int) {
-            Signal.EVENT -> EventSignal.serializer()
-            Signal.PING -> PingSignal.serializer()
-            Signal.PONG -> PongSignal.serializer()
-            Signal.IDENTIFY -> IdentifySignal.serializer()
-            Signal.READY -> ReadySignal.serializer()
-            else -> throw RuntimeException("Unknown event op: $op")
-        }
+	override fun selectDeserializer(element: JsonElement) =
+		when (val op = element.jsonObject["op"]!!.jsonPrimitive.int) {
+			Signal.EVENT -> EventSignal.serializer()
+			Signal.PING -> PingSignal.serializer()
+			Signal.PONG -> PongSignal.serializer()
+			Signal.IDENTIFY -> IdentifySignal.serializer()
+			Signal.READY -> ReadySignal.serializer()
+			else -> throw RuntimeException("Unknown event op: $op")
+		}
 }
 
 @ExperimentalSerializationApi
 object DynamicLookupSerializer : KSerializer<Any> {
-    override val descriptor = ContextualSerializer(Any::class, null, emptyArray()).descriptor
+	override val descriptor = ContextualSerializer(Any::class, null, emptyArray()).descriptor
 
-    @OptIn(InternalSerializationApi::class)
-    override fun serialize(
-        encoder: Encoder,
-        value: Any,
-    ) {
-        val actualSerializer = encoder.serializersModule.getContextual(value::class) ?: value::class.serializer()
-        @Suppress("UNCHECKED_CAST")
-        encoder.encodeSerializableValue(
-            actualSerializer as KSerializer<Any>,
-            value,
-        )
-    }
+	@OptIn(InternalSerializationApi::class)
+	override fun serialize(
+		encoder: Encoder,
+		value: Any,
+	) {
+		val actualSerializer = encoder.serializersModule.getContextual(value::class) ?: value::class.serializer()
+		@Suppress("UNCHECKED_CAST") encoder.encodeSerializableValue(
+			actualSerializer as KSerializer<Any>,
+			value,
+		)
+	}
 
-    override fun deserialize(decoder: Decoder): Any {
-        error("Unsupported")
-    }
+	override fun deserialize(decoder: Decoder): Any {
+		error("Unsupported")
+	}
 }

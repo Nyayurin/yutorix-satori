@@ -1,4 +1,4 @@
-<div align="center">
+<div style="text-align: center;">
 
 # Yutorix-Satori
 
@@ -22,23 +22,23 @@ build.gradle.kts
 
 ```kotlin
 maven {
-    url = uri("https://maven.pkg.github.com/Nyayurin/yutorix-satori")
-    credentials {
-        username = project.findProperty("gpr.actor") as String? ?: System.getenv("GITHUB_ACTOR")
-        password = project.findProperty("gpr.token") as String? ?: System.getenv("GITHUB_TOKEN")
-    } 
+	url = uri("https://maven.pkg.github.com/Nyayurin/yutorix-satori")
+	credentials {
+		username = project.findProperty("gpr.actor") as String? ?: System.getenv("GITHUB_ACTOR")
+		password = project.findProperty("gpr.token") as String? ?: System.getenv("GITHUB_TOKEN")
+	}
 }
 ```
 
 settings.gradle.kts
 
 ```kotlin
-maven {     
-    url = uri("https://maven.pkg.github.com/Nyayurin/yutorix-satori")
-    credentials {
-        username = providers.gradleProperty("gpr.actor").orNull ?: System.getenv("GITHUB_ACTOR")
-        password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
-    }
+maven {
+	url = uri("https://maven.pkg.github.com/Nyayurin/yutorix-satori")
+	credentials {
+		username = providers.gradleProperty("gpr.actor").orNull ?: System.getenv("GITHUB_ACTOR")
+		password = providers.gradleProperty("gpr.token").orNull ?: System.getenv("GITHUB_TOKEN")
+	}
 }
 ```
 
@@ -65,17 +65,23 @@ yutorix-satori-server = { module = "cn.yurin.yutorix:yutorix-satori-server", ver
 对于开发板, 它的版本号应该和 Commit 的完整 SHA 值一致<br>
 要获取一个 Commit 的完整 SHA 值, 请在 Commits 页面对应 Commit 处点击 Commit ID 右侧的复制按钮(Copy full SHA for *******)
 
+如果使用 adapter 模块, 请参考 [Ktor 文档](https://ktor.io/docs/client-engines.html) 引入引擎
+
 安装模块
 
 ```kotlin
-install(Adapter.satori(
-    host = "127.0.0.1",
-    port = 8080,
-    token = "token"
-))
-install(Server.satori(
-    listen = "0.0.0.0",
-    port = 8080,
-    token = "token"
-))
+install(
+	Adapter.satori(
+		host = "127.0.0.1",
+		port = 8080,
+		token = "token"
+	)
+)
+install(
+	Server.satori(
+		listen = "0.0.0.0",
+		port = 8080,
+		token = "token"
+	)
+)
 ```
