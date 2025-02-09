@@ -17,7 +17,6 @@ import cn.yurin.yutorix.module.satori.IdentifySignal
 import cn.yurin.yutorix.module.satori.PingSignal
 import cn.yurin.yutorix.module.satori.PongSignal
 import cn.yurin.yutorix.module.satori.ReadySignal
-import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
 import cn.yurin.yutorix.module.satori.Signal
 import io.ktor.client.HttpClient
 import io.ktor.client.plugins.websocket.WebSockets

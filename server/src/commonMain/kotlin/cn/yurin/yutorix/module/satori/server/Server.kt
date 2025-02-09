@@ -3,7 +3,6 @@
 package cn.yurin.yutorix.module.satori.server
 
 import cn.yurin.yutori.*
-import cn.yurin.yutorix.module.satori.SatoriServerProperties
 import kotlinx.atomicfu.atomic
 
 fun Server.Companion.satori(

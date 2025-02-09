@@ -3,7 +3,6 @@
 package cn.yurin.yutorix.module.satori.adapter
 
 import cn.yurin.yutori.*
-import cn.yurin.yutorix.module.satori.SatoriAdapterProperties
 import kotlinx.atomicfu.atomic
 import kotlinx.coroutines.delay
 

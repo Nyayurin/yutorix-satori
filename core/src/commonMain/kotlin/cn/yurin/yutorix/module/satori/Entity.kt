@@ -82,22 +82,6 @@ data class Ready(
 	val logins: List<SerializableLogin>,
 )
 
-data class SatoriAdapterProperties(
-	val host: String = "127.0.0.1",
-	val port: Int = 8080,
-	val path: String = "",
-	val token: String? = null,
-	val version: String = "v1",
-)
-
-data class SatoriServerProperties(
-	val listen: String = "0.0.0.0",
-	val port: Int = 8080,
-	val path: String = "",
-	val token: String? = null,
-	val version: String = "v1",
-)
-
 interface Convertable<U> {
 	fun toUniverse(
 		alias: String?,
